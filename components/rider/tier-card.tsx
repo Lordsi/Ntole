@@ -29,7 +29,7 @@ export function TierCard({
       className={cn(
         "flex w-44 shrink-0 flex-col gap-3 rounded-3xl p-4 text-left transition-colors",
         active
-          ? "bg-accent text-background ring-2 ring-accent"
+          ? "bg-accent text-background shadow-glow ring-2 ring-accent"
           : "bg-surface text-white ring-1 ring-white/5 hover:bg-surface-2",
       )}
     >
@@ -67,7 +67,7 @@ export function TierCard({
             )}
           />
         </span>
-        <span className="text-base font-semibold">
+        <span className="text-lg font-bold tracking-tight">
           {loading
             ? "..."
             : fareMinor !== undefined

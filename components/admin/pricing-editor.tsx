@@ -89,7 +89,7 @@ function TierCardEditor({
             type="checkbox"
             checked={draft.is_active}
             onChange={(e) => set("is_active", e.target.checked)}
-            className="h-4 w-4 accent-[#10C46F]"
+            className="h-4 w-4 accent-[#34D67E]"
           />
           Active
         </label>

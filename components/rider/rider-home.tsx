@@ -202,7 +202,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         </div>
       </header>
 
-      <h1 className="text-3xl font-semibold leading-tight">
+      <h1 className="text-[34px] font-bold leading-[1.05] tracking-tight">
         Where do you
         <br />
         want to go?

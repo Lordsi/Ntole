@@ -11,7 +11,7 @@ interface AvatarProps {
 function fallbackUrl(seed: string) {
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
     seed,
-  )}&backgroundColor=10C46F`;
+  )}&backgroundColor=34D67E`;
 }
 
 export function Avatar({ name = "User", src, size = 40, className }: AvatarProps) {

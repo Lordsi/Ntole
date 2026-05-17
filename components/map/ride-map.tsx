@@ -29,14 +29,14 @@ const DEFAULT_CENTER: LatLng = {
   lng: Number(process.env.NEXT_PUBLIC_DEFAULT_LNG ?? 33.7741),
 };
 
-const ACCENT = "#10C46F";
+const ACCENT = "#34D67E";
 
-function dotIcon(color: string, ring = "rgba(16,196,111,0.25)") {
+function dotIcon(color: string, ring = "rgba(52,214,126,0.25)") {
   return L.divIcon({
     className: "ntole-map-pin",
     iconSize: [22, 22],
     iconAnchor: [11, 11],
-    html: `<span style="display:inline-flex;width:22px;height:22px;border-radius:9999px;align-items:center;justify-content:center;background:${ring};"><span style="width:12px;height:12px;border-radius:9999px;background:${color};box-shadow:0 0 0 2px #0B0F0E;"></span></span>`,
+    html: `<span style="display:inline-flex;width:22px;height:22px;border-radius:9999px;align-items:center;justify-content:center;background:${ring};"><span style="width:12px;height:12px;border-radius:9999px;background:${color};box-shadow:0 0 0 2px #0B0C0E;"></span></span>`,
   });
 }
 
@@ -45,8 +45,8 @@ function carIcon() {
     className: "ntole-map-car",
     iconSize: [34, 34],
     iconAnchor: [17, 17],
-    html: `<span style="display:inline-flex;width:34px;height:34px;border-radius:9999px;align-items:center;justify-content:center;background:#10C46F;box-shadow:0 0 0 4px rgba(16,196,111,0.25),0 4px 10px rgba(0,0,0,0.4);">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="#0B0F0E"><path d="M5 17V11l2-5h10l2 5v6h-2v2H7v-2H5Zm2-6h10l-1.4-3.5H8.4L7 11Zm2 4a1 1 0 1 0-1-1 1 1 0 0 0 1 1Zm6 0a1 1 0 1 0-1-1 1 1 0 0 0 1 1Z"/></svg>
+    html: `<span style="display:inline-flex;width:34px;height:34px;border-radius:9999px;align-items:center;justify-content:center;background:#34D67E;box-shadow:0 0 0 4px rgba(52,214,126,0.25),0 4px 10px rgba(0,0,0,0.4);">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="#0B0C0E"><path d="M5 17V11l2-5h10l2 5v6h-2v2H7v-2H5Zm2-6h10l-1.4-3.5H8.4L7 11Zm2 4a1 1 0 1 0-1-1 1 1 0 0 0 1 1Zm6 0a1 1 0 1 0-1-1 1 1 0 0 0 1 1Z"/></svg>
     </span>`,
   });
 }

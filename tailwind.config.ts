@@ -9,18 +9,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "#0B0F0E",
-        surface: "#15201B",
-        "surface-2": "#1B2A24",
-        "surface-3": "#22332B",
+        background: "#0B0C0E",
+        surface: "#17191D",
+        "surface-2": "#22252A",
+        "surface-3": "#2C2F35",
         accent: {
-          DEFAULT: "#10C46F",
-          hover: "#0EAA60",
-          muted: "#0E5A37",
-          subtle: "#0B2118",
+          DEFAULT: "#34D67E",
+          hover: "#2BC470",
+          muted: "#1F5E3C",
+          subtle: "#132A1F",
         },
-        muted: "#8FA39A",
-        "muted-strong": "#B6C7BF",
+        muted: "#8B9098",
+        "muted-strong": "#B8BCC4",
         danger: "#FF5A5F",
         warning: "#F5A524",
       },
@@ -31,8 +31,8 @@ export default {
         pill: "9999px",
       },
       boxShadow: {
-        glow: "0 0 0 4px rgba(16,196,111,0.18)",
-        card: "0 8px 24px rgba(0,0,0,0.35)",
+        glow: "0 0 0 4px rgba(52,214,126,0.20)",
+        card: "0 8px 24px rgba(0,0,0,0.4)",
       },
       keyframes: {
         "fade-in": {
