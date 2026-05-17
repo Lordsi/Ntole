@@ -11,3 +11,5 @@ out
 coverage
 .idea
 .vscode
+*.tsbuildinfo
+next-env.d.ts
