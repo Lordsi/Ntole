@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function LoginForm() {
-  const supabase = createBrowserSupabaseClient();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
 
@@ -20,6 +19,7 @@ export function LoginForm() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
+      const supabase = createBrowserSupabaseClient();
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ||
         (typeof window !== "undefined" ? window.location.origin : "");

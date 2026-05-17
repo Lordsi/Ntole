@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Sign in to Ntole" };
+export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
