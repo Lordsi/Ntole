@@ -24,7 +24,7 @@ import type { Profile, RideTier } from "@/lib/supabase/types";
 import type { PlaceSuggestion } from "@/lib/maps/types";
 
 interface RiderHomeProps {
-  profile: Profile;
+  profile: Profile | null;
   tiers: RideTier[];
 }
 
@@ -33,8 +33,20 @@ interface QuoteRow {
   fare: { total_minor: number; currency: string };
 }
 
+// Form state we persist across the sign-in round-trip so anonymous users
+// don't have to re-enter pickup/drop after they log in.
+const PENDING_RIDE_STORAGE_KEY = "ntole.pendingRide";
+
+interface PendingRide {
+  mode: "driver" | "package";
+  pickup: PlaceSuggestion | null;
+  drop: PlaceSuggestion | null;
+  selectedTierId: string;
+}
+
 export function RiderHome({ profile, tiers }: RiderHomeProps) {
   const router = useRouter();
+  const isAuthed = profile !== null;
 
   const [mode, setMode] = useState<"driver" | "package">("driver");
   const [pickup, setPickup] = useState<PlaceSuggestion | null>(null);
@@ -49,7 +61,23 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch quotes when both endpoints are set.
+  // After signing in, restore any ride form the user was building.
+  useEffect(() => {
+    if (!isAuthed || typeof window === "undefined") return;
+    const raw = window.sessionStorage.getItem(PENDING_RIDE_STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw) as PendingRide;
+      if (saved.mode) setMode(saved.mode);
+      if (saved.pickup) setPickup(saved.pickup);
+      if (saved.drop) setDrop(saved.drop);
+      if (saved.selectedTierId) setSelectedTierId(saved.selectedTierId);
+    } catch {
+      // ignore malformed storage
+    }
+    window.sessionStorage.removeItem(PENDING_RIDE_STORAGE_KEY);
+  }, [isAuthed]);
+
   useEffect(() => {
     if (!pickup || !drop) {
       setQuotes([]);
@@ -94,8 +122,25 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
     setDrop(pickup);
   }
 
+  // Stash the in-progress form so it survives the trip through /login.
+  function persistPendingRide() {
+    if (typeof window === "undefined") return;
+    const payload: PendingRide = { mode, pickup, drop, selectedTierId };
+    window.sessionStorage.setItem(
+      PENDING_RIDE_STORAGE_KEY,
+      JSON.stringify(payload),
+    );
+  }
+
   async function requestRide() {
     if (!pickup || !drop || !selectedTierId) return;
+
+    if (!isAuthed) {
+      persistPendingRide();
+      router.push("/login?next=/rider");
+      return;
+    }
+
     setRequesting(true);
     setError(null);
     try {
@@ -117,6 +162,17 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
     }
   }
 
+  const canRequest = Boolean(pickup && drop && selectedTierId);
+  const requestLabel = !isAuthed
+    ? mode === "driver"
+      ? "Sign in to request ride"
+      : "Sign in to send package"
+    : requesting
+      ? "Requesting..."
+      : mode === "driver"
+        ? "Request ride"
+        : "Send package";
+
   return (
     <div className="flex min-h-screen flex-col gap-5 px-5 py-6">
       <header className="flex items-center justify-between">
@@ -127,9 +183,22 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
           <IconButton aria-label="Notifications">
             <BellIcon className="h-5 w-5" />
           </IconButton>
-          <Link href="/rider/profile" aria-label="Profile">
-            <Avatar name={profile.full_name || "Rider"} src={profile.avatar_url} size={44} />
-          </Link>
+          {isAuthed ? (
+            <Link href="/rider/profile" aria-label="Profile">
+              <Avatar
+                name={profile.full_name || "Rider"}
+                src={profile.avatar_url}
+                size={44}
+              />
+            </Link>
+          ) : (
+            <Link
+              href="/login?next=/rider"
+              className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:bg-accent/90"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </header>
 
@@ -139,18 +208,39 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         want to go?
       </h1>
 
-      <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 ring-1 ring-white/5">
-        <Avatar name={profile.full_name || "Rider"} src={profile.avatar_url} size={44} />
-        <div className="flex flex-1 flex-col">
-          <span className="text-sm font-semibold">
-            {profile.full_name || "Welcome back"}
-          </span>
-          <span className="text-xs text-muted">
-            {profile.trip_count} trips completed
-          </span>
+      {isAuthed ? (
+        <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 ring-1 ring-white/5">
+          <Avatar
+            name={profile.full_name || "Rider"}
+            src={profile.avatar_url}
+            size={44}
+          />
+          <div className="flex flex-1 flex-col">
+            <span className="text-sm font-semibold">
+              {profile.full_name || "Welcome back"}
+            </span>
+            <span className="text-xs text-muted">
+              {profile.trip_count} trips completed
+            </span>
+          </div>
+          <RatingStars value={profile.rating} />
         </div>
-        <RatingStars value={profile.rating} />
-      </div>
+      ) : (
+        <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 ring-1 ring-white/5">
+          <div className="flex flex-1 flex-col">
+            <span className="text-sm font-semibold">Browsing as a guest</span>
+            <span className="text-xs text-muted">
+              Preview prices freely. Sign in only when you&rsquo;re ready to ride.
+            </span>
+          </div>
+          <Link
+            href="/login?next=/rider"
+            className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-black hover:bg-accent/90"
+          >
+            Sign in
+          </Link>
+        </div>
+      )}
 
       <div className="relative flex flex-col gap-2">
         <LocationInput
@@ -220,14 +310,10 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         <Button
           fullWidth
           size="lg"
-          disabled={!pickup || !drop || !selectedTierId || requesting}
+          disabled={!canRequest || requesting}
           onClick={requestRide}
         >
-          {requesting
-            ? "Requesting..."
-            : mode === "driver"
-              ? "Request ride"
-              : "Send package"}
+          {requestLabel}
         </Button>
       </div>
     </div>
