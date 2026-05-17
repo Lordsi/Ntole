@@ -10,7 +10,7 @@ export const IconButton = React.forwardRef<
       ref={ref}
       style={{ width: size, height: size }}
       className={cn(
-        "grid place-items-center rounded-full bg-surface text-white transition-[background-color,transform] duration-150 hover:bg-surface-2 active:scale-95 disabled:opacity-40",
+        "grid place-items-center rounded-full glass text-white transition-[background-color,transform] duration-150 hover:bg-white/5 active:scale-95 disabled:opacity-40",
         className,
       )}
       {...props}

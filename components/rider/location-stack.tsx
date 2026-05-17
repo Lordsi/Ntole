@@ -34,25 +34,25 @@ export function LocationStack({
   return (
     <div
       className={cn(
-        "relative rounded-2xl bg-surface",
+        "relative rounded-3xl glass shadow-card overflow-hidden",
         className,
       )}
     >
       <LocationInput
         flush
         variant="pickup"
-        placeholder="Pickup location"
+        placeholder="Add a pick-up location"
         value={pickup}
         onChange={onPickupChange}
       />
 
       {/* Hairline divider, indented under the indicator column. */}
-      <div className="ml-[52px] h-px bg-white/[0.08]" />
+      <div className="ml-[52px] h-px bg-white/10" />
 
       <LocationInput
         flush
         variant="drop"
-        placeholder="Where to?"
+        placeholder="Add your destination"
         value={drop}
         onChange={onDropChange}
       />
@@ -61,9 +61,9 @@ export function LocationStack({
         type="button"
         onClick={swap}
         aria-label="Swap pickup and destination"
-        className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-surface-2 text-muted-strong transition-[background-color,transform] duration-150 hover:bg-surface-3 hover:text-white active:scale-95"
+        className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-surface-2/90 text-white ring-1 ring-white/10 backdrop-blur-md transition-[background-color,transform] duration-150 hover:bg-surface-3 active:scale-95"
       >
-        <SwapIcon className="h-3.5 w-3.5" />
+        <SwapIcon className="h-4 w-4" />
       </button>
     </div>
   );
