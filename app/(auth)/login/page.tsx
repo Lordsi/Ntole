@@ -14,10 +14,12 @@ export default function LoginPage() {
               <path d="M5 14 12 5l7 9h-3l-4-5-4 5H5Zm0 1.5h14v2H5v-2Z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-semibold">Welcome to Ntole</h1>
-          <p className="text-center text-sm text-muted">
-            Hail a ride or send a package across Malawi. Sign in with your email
-            and we&apos;ll send you a magic link.
+          <h1 className="text-3xl font-bold tracking-[-0.02em]">
+            Welcome to Ntole
+          </h1>
+          <p className="text-center text-[14px] text-muted">
+            Hail a ride or send a package across Malawi. Sign in with your
+            email and password.
           </p>
         </div>
         <Suspense fallback={null}>
