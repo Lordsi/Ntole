@@ -8,16 +8,14 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { PillToggle } from "@/components/ui/pill-toggle";
-import { RatingStars } from "@/components/ui/rating-stars";
 import {
   BellIcon,
   MenuIcon,
   PackageIcon,
   SteeringWheelIcon,
-  SwapIcon,
 } from "@/components/ui/icons";
 
-import { LocationInput } from "./location-input";
+import { LocationStack } from "./location-stack";
 import { TierCard } from "./tier-card";
 
 import type { Profile, RideTier } from "@/lib/supabase/types";
@@ -117,11 +115,6 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
     return map;
   }, [quotes]);
 
-  function swap() {
-    setPickup(drop);
-    setDrop(pickup);
-  }
-
   // Stash the in-progress form so it survives the trip through /login.
   function persistPendingRide() {
     if (typeof window === "undefined") return;
@@ -174,27 +167,27 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         : "Send package";
 
   return (
-    <div className="flex min-h-screen flex-col gap-5 px-5 py-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-7 px-5 pb-6 pt-4">
       <header className="flex items-center justify-between">
-        <IconButton aria-label="Menu">
-          <MenuIcon className="h-5 w-5" />
+        <IconButton aria-label="Menu" size={40}>
+          <MenuIcon className="h-[18px] w-[18px]" />
         </IconButton>
-        <div className="flex items-center gap-3">
-          <IconButton aria-label="Notifications">
-            <BellIcon className="h-5 w-5" />
+        <div className="flex items-center gap-2.5">
+          <IconButton aria-label="Notifications" size={40}>
+            <BellIcon className="h-[18px] w-[18px]" />
           </IconButton>
           {isAuthed ? (
             <Link href="/rider/profile" aria-label="Profile">
               <Avatar
                 name={profile.full_name || "Rider"}
                 src={profile.avatar_url}
-                size={44}
+                size={40}
               />
             </Link>
           ) : (
             <Link
               href="/login?next=/rider"
-              className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-black hover:bg-accent/90"
+              className="inline-flex h-10 items-center rounded-full bg-accent px-4 text-[14px] font-semibold tracking-[-0.01em] text-black transition-colors hover:bg-accent-hover"
             >
               Sign in
             </Link>
@@ -202,68 +195,35 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         </div>
       </header>
 
-      <h1 className="text-[34px] font-bold leading-[1.05] tracking-tight">
-        Where do you
-        <br />
-        want to go?
-      </h1>
-
-      {isAuthed ? (
-        <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 ring-1 ring-white/5">
-          <Avatar
-            name={profile.full_name || "Rider"}
-            src={profile.avatar_url}
-            size={44}
-          />
-          <div className="flex flex-1 flex-col">
-            <span className="text-sm font-semibold">
-              {profile.full_name || "Welcome back"}
-            </span>
-            <span className="text-xs text-muted">
-              {profile.trip_count} trips completed
-            </span>
-          </div>
-          <RatingStars value={profile.rating} />
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 ring-1 ring-white/5">
-          <div className="flex flex-1 flex-col">
-            <span className="text-sm font-semibold">Browsing as a guest</span>
-            <span className="text-xs text-muted">
-              Preview prices freely. Sign in only when you&rsquo;re ready to ride.
-            </span>
-          </div>
-          <Link
-            href="/login?next=/rider"
-            className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-black hover:bg-accent/90"
-          >
-            Sign in
-          </Link>
-        </div>
-      )}
-
-      <div className="relative flex flex-col gap-2">
-        <LocationInput
-          variant="pickup"
-          placeholder="Add a pick-up location"
-          value={pickup}
-          onChange={setPickup}
-        />
-        <button
-          type="button"
-          onClick={swap}
-          className="absolute left-1/2 top-[58px] z-10 grid h-9 w-9 -translate-x-1/2 place-items-center rounded-full bg-surface-2 ring-1 ring-white/10 hover:bg-surface-3"
-          aria-label="Swap pickup and drop"
-        >
-          <SwapIcon className="h-4 w-4 text-white" />
-        </button>
-        <LocationInput
-          variant="drop"
-          placeholder="Add your destination"
-          value={drop}
-          onChange={setDrop}
-        />
+      <div className="flex flex-col gap-2">
+        <h1 className="text-[40px] font-bold leading-[1.02] tracking-[-0.02em]">
+          Where to?
+        </h1>
+        {!isAuthed && (
+          <p className="text-[15px] text-muted">
+            Preview fares as a guest.{" "}
+            <Link
+              href="/login?next=/rider"
+              className="text-accent transition-colors hover:text-accent-hover"
+            >
+              Sign in
+            </Link>{" "}
+            to book.
+          </p>
+        )}
+        {isAuthed && (
+          <p className="text-[15px] text-muted">
+            Welcome back, {profile.full_name?.split(" ")[0] || "rider"}.
+          </p>
+        )}
       </div>
+
+      <LocationStack
+        pickup={pickup}
+        drop={drop}
+        onPickupChange={setPickup}
+        onDropChange={setDrop}
+      />
 
       <PillToggle
         value={mode}
@@ -282,29 +242,39 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         ]}
       />
 
-      <div className="-mx-5 overflow-x-auto px-5 no-scrollbar">
-        <div className="flex gap-3 pb-1">
-          {tiers.map((tier) => (
-            <TierCard
-              key={tier.id}
-              tier={tier}
-              active={tier.id === selectedTierId}
-              onClick={() => setSelectedTierId(tier.id)}
-              fareMinor={fareByTier.get(tier.id)}
-              durationMin={durationMin}
-              loading={loadingQuote && pickup !== null && drop !== null}
-            />
-          ))}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">
+            Choose a ride
+          </h2>
+          {distanceKm !== undefined && durationMin !== undefined && (
+            <span className="text-[12px] text-muted">
+              {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min
+            </span>
+          )}
+        </div>
+        <div className="-mx-5 overflow-x-auto px-5 no-scrollbar">
+          <div className="flex gap-3 pb-1">
+            {tiers.map((tier) => (
+              <TierCard
+                key={tier.id}
+                tier={tier}
+                active={tier.id === selectedTierId}
+                onClick={() => setSelectedTierId(tier.id)}
+                fareMinor={fareByTier.get(tier.id)}
+                durationMin={durationMin}
+                loading={loadingQuote && pickup !== null && drop !== null}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {distanceKm !== undefined && durationMin !== undefined && (
-        <p className="text-xs text-muted">
-          Estimated trip: {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min
+      {error && (
+        <p className="text-[13px] text-danger" role="alert">
+          {error}
         </p>
       )}
-
-      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="mt-auto pt-2">
         <Button

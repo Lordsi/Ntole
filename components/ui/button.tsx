@@ -6,19 +6,19 @@ type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    "bg-accent text-background hover:bg-accent-hover active:bg-accent-hover disabled:opacity-50",
+    "bg-accent text-black hover:bg-accent-hover active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100",
   secondary:
-    "bg-surface-2 text-white hover:bg-surface-3 disabled:opacity-50",
-  ghost: "bg-transparent text-white hover:bg-white/5 disabled:opacity-50",
+    "bg-surface text-white hover:bg-surface-2 active:scale-[0.98] disabled:opacity-40",
+  ghost: "bg-transparent text-white hover:bg-white/5 disabled:opacity-40",
   danger:
-    "bg-danger text-white hover:opacity-90 disabled:opacity-50",
-  pill: "bg-accent text-background hover:bg-accent-hover rounded-pill px-5",
+    "bg-danger text-white hover:opacity-90 active:scale-[0.98] disabled:opacity-40",
+  pill: "bg-accent text-black hover:bg-accent-hover rounded-full px-5 active:scale-[0.98]",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-9 px-4 text-sm",
-  md: "h-12 px-5 text-sm",
-  lg: "h-14 px-6 text-base",
+  sm: "h-9 px-4 text-[13px]",
+  md: "h-11 px-5 text-[15px]",
+  lg: "h-[52px] px-6 text-[17px]",
 };
 
 export interface ButtonProps
@@ -37,7 +37,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold tracking-[-0.01em] transition-[background-color,transform,opacity] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed",
           VARIANTS[variant],
           SIZES[size],
           fullWidth && "w-full",

@@ -26,19 +26,22 @@ export function TierCard({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "flex w-44 shrink-0 flex-col gap-3 rounded-3xl p-4 text-left transition-colors",
+        "flex w-40 shrink-0 flex-col gap-3 rounded-3xl p-4 text-left transition-[background-color,transform,color] duration-200 ease-out active:scale-[0.98]",
         active
-          ? "bg-accent text-background shadow-glow ring-2 ring-accent"
-          : "bg-surface text-white ring-1 ring-white/5 hover:bg-surface-2",
+          ? "bg-accent text-black"
+          : "bg-surface text-white hover:bg-surface-2",
       )}
     >
-      <div className="flex flex-col">
-        <span className="text-base font-semibold">{tier.name}</span>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[15px] font-semibold tracking-[-0.01em]">
+          {tier.name}
+        </span>
         <span
           className={cn(
-            "text-xs",
-            active ? "text-background/70" : "text-muted",
+            "text-[12px]",
+            active ? "text-black/65" : "text-muted",
           )}
         >
           {durationMin ? formatDuration(durationMin) : "—"}
@@ -46,8 +49,8 @@ export function TierCard({
       </div>
       <div
         className={cn(
-          "inline-flex items-center gap-1 text-xs",
-          active ? "text-background/80" : "text-muted-strong",
+          "inline-flex items-center gap-1 text-[12px] font-medium",
+          active ? "text-black/75" : "text-muted-strong",
         )}
       >
         <SeatIcon className="h-3.5 w-3.5" />
@@ -56,20 +59,17 @@ export function TierCard({
       <div className="flex items-center justify-between">
         <span
           className={cn(
-            "grid h-9 w-9 place-items-center rounded-full",
-            active ? "bg-background/15" : "bg-surface-2",
+            "grid h-8 w-8 place-items-center rounded-full",
+            active ? "bg-black/10" : "bg-surface-2",
           )}
         >
           <SteeringWheelIcon
-            className={cn(
-              "h-4 w-4",
-              active ? "text-background" : "text-white",
-            )}
+            className={cn("h-4 w-4", active ? "text-black" : "text-white")}
           />
         </span>
-        <span className="text-lg font-bold tracking-tight">
+        <span className="text-[17px] font-bold tracking-[-0.02em]">
           {loading
-            ? "..."
+            ? "…"
             : fareMinor !== undefined
               ? formatMoney(fareMinor, tier.currency)
               : "—"}

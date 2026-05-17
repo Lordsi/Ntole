@@ -19,7 +19,7 @@ export function Avatar({ name = "User", src, size = 40, className }: AvatarProps
   return (
     <span
       className={cn(
-        "inline-block overflow-hidden rounded-full bg-surface-2 ring-1 ring-white/10",
+        "inline-block overflow-hidden rounded-full bg-surface-2",
         className,
       )}
       style={{ width: size, height: size }}
