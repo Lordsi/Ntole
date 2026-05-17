@@ -9,22 +9,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Aligned to iOS dark-mode systemGray scale (#000, gray6, gray5, gray4).
-        background: "#000000",
-        surface: "#1C1C1E",
-        "surface-2": "#2C2C2E",
-        "surface-3": "#3A3A3C",
-        // Single-purpose accent for interactive emphasis (CTA + selected state).
+        // Premium dark-mode palette: deep, near-black navy with subtle blue cast.
+        // Surfaces stack above the base via translucency and backdrop blur.
+        background: "#0B0C10",
+        surface: "#15171C",
+        "surface-2": "#1E2128",
+        "surface-3": "#2A2E37",
+        // Vibrant neon/lime green for primary actions and active states.
         accent: {
-          DEFAULT: "#34D67E",
-          hover: "#2BC470",
-          muted: "#1F5E3C",
-          subtle: "#132A1F",
+          DEFAULT: "#28C76F",
+          hover: "#22B864",
+          muted: "#1A6B3F",
+          subtle: "#0F2A1B",
         },
-        // iOS systemGray + systemGray2 for secondary text.
-        muted: "#8E8E93",
-        "muted-strong": "#AEAEB2",
-        // iOS systemRed / systemOrange dark variants.
+        // Cool gray secondary text, tuned to the new background hue.
+        muted: "#8B8F99",
+        "muted-strong": "#B7BBC4",
+        // Status colors.
         danger: "#FF453A",
         warning: "#FF9F0A",
       },
@@ -35,9 +36,15 @@ export default {
         pill: "9999px",
       },
       boxShadow: {
-        // Single subtle elevation; Apple relies on contrast, not glow.
-        card: "0 1px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.45)",
-        sheet: "0 -8px 32px rgba(0,0,0,0.5)",
+        // Glass cards: inset hairline highlight + soft depth.
+        card: "0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 24px rgba(0,0,0,0.55)",
+        sheet:
+          "0 1px 0 rgba(255,255,255,0.06) inset, 0 -12px 40px rgba(0,0,0,0.65)",
+        // Soft neon halo around primary CTAs.
+        glow: "0 8px 24px rgba(40,199,111,0.35), 0 0 0 1px rgba(40,199,111,0.25) inset",
+      },
+      backdropBlur: {
+        xs: "2px",
       },
       keyframes: {
         "fade-in": {

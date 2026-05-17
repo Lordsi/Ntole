@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { PillToggle } from "@/components/ui/pill-toggle";
+import { RatingStars } from "@/components/ui/rating-stars";
 import {
   BellIcon,
   MenuIcon,
@@ -167,27 +168,27 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         : "Send package";
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-7 px-5 pb-6 pt-4">
+    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-5 pb-6 pt-5">
       <header className="flex items-center justify-between">
-        <IconButton aria-label="Menu" size={40}>
+        <IconButton aria-label="Menu" size={44}>
           <MenuIcon className="h-[18px] w-[18px]" />
         </IconButton>
         <div className="flex items-center gap-2.5">
-          <IconButton aria-label="Notifications" size={40}>
+          <IconButton aria-label="Notifications" size={44}>
             <BellIcon className="h-[18px] w-[18px]" />
           </IconButton>
           {isAuthed ? (
-            <Link href="/rider/profile" aria-label="Profile">
+            <Link href="/rider/profile" aria-label="Profile" className="rounded-full ring-1 ring-white/10">
               <Avatar
                 name={profile.full_name || "Rider"}
                 src={profile.avatar_url}
-                size={40}
+                size={44}
               />
             </Link>
           ) : (
             <Link
               href="/login?next=/rider"
-              className="inline-flex h-10 items-center rounded-full bg-accent px-4 text-[14px] font-semibold tracking-[-0.01em] text-black transition-colors hover:bg-accent-hover"
+              className="inline-flex h-11 items-center rounded-full bg-accent px-4 text-[14px] font-semibold tracking-[-0.01em] text-black shadow-glow transition-colors hover:bg-accent-hover"
             >
               Sign in
             </Link>
@@ -196,8 +197,9 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
       </header>
 
       <div className="flex flex-col gap-2">
-        <h1 className="text-[40px] font-bold leading-[1.02] tracking-[-0.02em]">
-          Where to?
+        <h1 className="text-[40px] font-bold leading-[1.02] tracking-[-0.03em]">
+          Where do you{" "}
+          <span className="text-muted-strong/80">want to go?</span>
         </h1>
         {!isAuthed && (
           <p className="text-[15px] text-muted">
@@ -211,12 +213,12 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
             to book.
           </p>
         )}
-        {isAuthed && (
-          <p className="text-[15px] text-muted">
-            Welcome back, {profile.full_name?.split(" ")[0] || "rider"}.
-          </p>
-        )}
       </div>
+
+      {/* Optional active-driver banner — shown for authenticated riders as a
+          quick reminder that they have a previous driver they liked. Hidden
+          for guests so the empty state stays clean. */}
+      {isAuthed && <ActiveDriverBanner name={profile.full_name} />}
 
       <LocationStack
         pickup={pickup}
@@ -244,8 +246,8 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
 
       <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">
-            Choose a ride
+          <h2 className="text-[12px] font-semibold uppercase tracking-[0.18em] text-muted">
+            Choose a Ride
           </h2>
           {distanceKm !== undefined && durationMin !== undefined && (
             <span className="text-[12px] text-muted">
@@ -286,6 +288,28 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
           {requestLabel}
         </Button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Compact "you recently rode with…" banner. Pure presentational right now —
+ * a future iteration can pull the most recent completed ride from the API.
+ */
+function ActiveDriverBanner({ name }: { name?: string | null }) {
+  const firstName = name?.split(" ")[0] ?? "there";
+  return (
+    <div className="flex items-center gap-3 rounded-2xl glass px-3 py-2.5 shadow-card">
+      <Avatar name="Ucok Behel" size={36} />
+      <div className="flex flex-1 flex-col leading-tight">
+        <span className="text-[13px] font-semibold tracking-[-0.01em]">
+          Welcome back, {firstName}
+        </span>
+        <span className="text-[11px] text-muted">
+          Last ride · Ucok Behel · Honda CRV
+        </span>
+      </div>
+      <RatingStars value={5} size={11} />
     </div>
   );
 }

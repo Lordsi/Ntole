@@ -29,24 +29,24 @@ const DEFAULT_CENTER: LatLng = {
   lng: Number(process.env.NEXT_PUBLIC_DEFAULT_LNG ?? 33.7741),
 };
 
-const ACCENT = "#34D67E";
+const ACCENT = "#28C76F";
 
-function dotIcon(color: string, ring = "rgba(52,214,126,0.25)") {
+function dotIcon(color: string, ring = "rgba(40,199,111,0.28)") {
   return L.divIcon({
     className: "ntole-map-pin",
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-    html: `<span style="display:inline-flex;width:22px;height:22px;border-radius:9999px;align-items:center;justify-content:center;background:${ring};"><span style="width:12px;height:12px;border-radius:9999px;background:${color};box-shadow:0 0 0 2px #0B0C0E;"></span></span>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    html: `<span style="display:inline-flex;width:26px;height:26px;border-radius:9999px;align-items:center;justify-content:center;background:${ring};box-shadow:0 0 18px ${ring};"><span style="width:14px;height:14px;border-radius:9999px;background:${color};box-shadow:0 0 0 3px #0B0C10;"></span></span>`,
   });
 }
 
 function carIcon() {
   return L.divIcon({
     className: "ntole-map-car",
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    html: `<span style="display:inline-flex;width:34px;height:34px;border-radius:9999px;align-items:center;justify-content:center;background:#34D67E;box-shadow:0 0 0 4px rgba(52,214,126,0.25),0 4px 10px rgba(0,0,0,0.4);">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="#0B0C0E"><path d="M5 17V11l2-5h10l2 5v6h-2v2H7v-2H5Zm2-6h10l-1.4-3.5H8.4L7 11Zm2 4a1 1 0 1 0-1-1 1 1 0 0 0 1 1Zm6 0a1 1 0 1 0-1-1 1 1 0 0 0 1 1Z"/></svg>
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    html: `<span style="display:inline-flex;width:36px;height:36px;border-radius:9999px;align-items:center;justify-content:center;background:#28C76F;box-shadow:0 0 0 4px rgba(40,199,111,0.28),0 0 22px rgba(40,199,111,0.55),0 4px 10px rgba(0,0,0,0.5);">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="#0B0C10"><path d="M5 17V11l2-5h10l2 5v6h-2v2H7v-2H5Zm2-6h10l-1.4-3.5H8.4L7 11Zm2 4a1 1 0 1 0-1-1 1 1 0 0 0 1 1Zm6 0a1 1 0 1 0-1-1 1 1 0 0 0 1 1Z"/></svg>
     </span>`,
   });
 }
@@ -105,10 +105,29 @@ export default function RideMap({
           <Marker position={[driver.lat, driver.lng]} icon={driverPinIcon} />
         )}
         {route && route.length > 1 && (
-          <Polyline
-            positions={route}
-            pathOptions={{ color: ACCENT, weight: 5, opacity: 0.95 }}
-          />
+          <>
+            {/* Outer halo for the "glowing neon" effect. */}
+            <Polyline
+              positions={route}
+              pathOptions={{
+                color: ACCENT,
+                weight: 14,
+                opacity: 0.18,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+            />
+            <Polyline
+              positions={route}
+              pathOptions={{
+                color: ACCENT,
+                weight: 5,
+                opacity: 1,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+            />
+          </>
         )}
         <FitBounds points={points} />
       </MapContainer>

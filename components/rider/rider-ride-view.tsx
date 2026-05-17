@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { RideMap } from "@/components/map";
 import { IconButton } from "@/components/ui/icon-button";
-import { ArrowLeftIcon } from "@/components/ui/icons";
+import { ArrowLeftIcon, MapPinIcon } from "@/components/ui/icons";
 import { Avatar } from "@/components/ui/avatar";
 
 import { DriverArrivingPanel } from "./driver-arriving-panel";
@@ -66,6 +66,11 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
     [ride.status],
   );
 
+  // State 3 ("in-trip") gets a more zoomed-in / immersive look. Earlier
+  // states keep the floating top route summary visible above the map.
+  const showFloatingRouteSummary =
+    ride.status === "requested" || ride.status === "accepted";
+
   return (
     <div className="relative flex min-h-screen flex-col">
       <div className="absolute inset-0 -z-0">
@@ -75,16 +80,28 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
           driver={driverCoords}
           className="h-full w-full"
         />
+        {/* Soft top/bottom vignette to anchor the floating UI without a hard
+            edge that fights the map. */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/70 via-transparent to-background/60" />
       </div>
 
       <header className="z-10 flex items-center justify-between p-5">
         <Link href="/rider">
-          <IconButton aria-label="Back">
+          <IconButton aria-label="Back" size={44}>
             <ArrowLeftIcon className="h-5 w-5" />
           </IconButton>
         </Link>
-        <Avatar name="You" size={44} />
+        <span className="rounded-full ring-1 ring-white/10">
+          <Avatar name="You" size={44} />
+        </span>
       </header>
+
+      {showFloatingRouteSummary && (
+        <FloatingRouteSummary
+          pickupAddress={ride.pickup_address}
+          dropAddress={ride.drop_address}
+        />
+      )}
 
       <div className="z-10 mt-auto flex flex-col gap-3 p-4">
         {ride.status === "requested" && (
@@ -115,6 +132,54 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
         )}
         {ride.status === "cancelled" && <CancelledRidePanel ride={ride} />}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Minimized version of the home screen's LocationStack — used as a floating
+ * pill over the map so the route is always glanceable while you're waiting
+ * for or meeting your driver.
+ */
+function FloatingRouteSummary({
+  pickupAddress,
+  dropAddress,
+}: {
+  pickupAddress?: string | null;
+  dropAddress?: string | null;
+}) {
+  return (
+    <div className="z-10 mx-4 mt-1 overflow-hidden rounded-3xl glass shadow-card">
+      <Row
+        indicator={
+          <span className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_0_4px_rgba(40,199,111,0.2)]" />
+        }
+        label={pickupAddress || "Pickup location"}
+      />
+      <div className="ml-[52px] h-px bg-white/10" />
+      <Row
+        indicator={<MapPinIcon className="h-3.5 w-3.5 text-white" />}
+        label={dropAddress || "Destination"}
+      />
+    </div>
+  );
+}
+
+function Row({
+  indicator,
+  label,
+}: {
+  indicator: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex h-12 items-center gap-3 px-4">
+      <span className="grid h-6 w-6 shrink-0 place-items-center">
+        {indicator}
+      </span>
+      <span className="line-clamp-1 flex-1 text-[14px] font-medium text-white">
+        {label}
+      </span>
     </div>
   );
 }
