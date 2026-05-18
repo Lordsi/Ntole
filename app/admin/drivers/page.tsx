@@ -1,8 +1,16 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/shared/page-header";
 import type { Driver, Profile, Vehicle } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
+
+const STATUS_TINT: Record<string, string> = {
+  online:
+    "bg-primary-container/15 text-primary-container ring-primary-container/30",
+  on_trip:
+    "bg-secondary-container/20 text-secondary-container ring-secondary-container/30",
+  offline: "bg-white/[0.05] text-on-surface-variant ring-white/[0.08]",
+};
 
 export default async function AdminDriversPage() {
   const supabase = await createServerSupabaseClient();
@@ -32,58 +40,85 @@ export default async function AdminDriversPage() {
     ((vehiclesRes.data ?? []) as Vehicle[]).map((v) => [v.id, v]),
   );
 
+  const list = (drivers ?? []) as Driver[];
+
   return (
-    <Card className="overflow-hidden p-0">
-      <table className="w-full text-sm">
-        <thead className="bg-surface-2 text-xs uppercase tracking-wide text-muted">
-          <tr>
-            <th className="px-4 py-3 text-left">Driver</th>
-            <th className="px-4 py-3 text-left">Vehicle</th>
-            <th className="px-4 py-3 text-left">Status</th>
-            <th className="px-4 py-3 text-left">Verified</th>
-            <th className="px-4 py-3 text-left">Last seen</th>
-          </tr>
-        </thead>
-        <tbody>
-          {((drivers ?? []) as Driver[]).map((d) => {
-            const p = profileMap.get(d.profile_id);
-            const v = d.vehicle_id ? vehicleMap.get(d.vehicle_id) : null;
-            return (
-              <tr key={d.profile_id} className="border-t border-white/5">
-                <td className="px-4 py-3">
-                  <div className="flex flex-col">
-                    <span className="font-semibold">
-                      {p?.full_name || "—"}
-                    </span>
-                    <span className="text-xs text-muted">{p?.phone}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  {v ? (
+    <>
+      <PageHeader
+        title="Drivers"
+        subtitle={`${list.length} driver accounts on the platform`}
+        icon="directions_car"
+      />
+
+      <div className="glass-panel rounded-lg overflow-hidden">
+        <table className="w-full font-body-md text-body-md">
+          <thead>
+            <tr className="bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm uppercase tracking-[0.12em]">
+              <th className="px-md py-sm text-left">Driver</th>
+              <th className="px-md py-sm text-left">Vehicle</th>
+              <th className="px-md py-sm text-left">Status</th>
+              <th className="px-md py-sm text-left">Verified</th>
+              <th className="px-md py-sm text-left">Last seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((d) => {
+              const p = profileMap.get(d.profile_id);
+              const v = d.vehicle_id ? vehicleMap.get(d.vehicle_id) : null;
+              const tint =
+                STATUS_TINT[d.status] ?? STATUS_TINT.offline;
+              return (
+                <tr
+                  key={d.profile_id}
+                  className="border-t border-white/[0.06] hover:bg-white/[0.03] transition-colors"
+                >
+                  <td className="px-md py-md">
                     <div className="flex flex-col">
-                      <span>
-                        {v.make} {v.model}
+                      <span className="font-semibold text-on-surface">
+                        {p?.full_name || "—"}
                       </span>
-                      <span className="text-xs text-muted">
-                        {v.plate_number}
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">
+                        {p?.phone || "no phone"}
                       </span>
                     </div>
-                  ) : (
-                    <span className="text-xs text-muted">No vehicle</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 capitalize">{d.status}</td>
-                <td className="px-4 py-3">{d.is_verified ? "Yes" : "No"}</td>
-                <td className="px-4 py-3 text-xs text-muted">
-                  {d.last_seen_at
-                    ? new Date(d.last_seen_at).toLocaleString()
-                    : "—"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </Card>
+                  </td>
+                  <td className="px-md py-md">
+                    {v ? (
+                      <div className="flex flex-col">
+                        <span className="text-on-surface">
+                          {v.make} {v.model}
+                        </span>
+                        <span className="font-label-sm text-label-sm text-on-surface-variant">
+                          {v.plate_number}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">
+                        No vehicle
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-md py-md">
+                    <span
+                      className={`inline-flex items-center rounded-full px-sm py-0.5 font-label-sm text-label-sm uppercase tracking-[0.12em] ring-1 ${tint}`}
+                    >
+                      {d.status.replace(/_/g, " ")}
+                    </span>
+                  </td>
+                  <td className="px-md py-md text-on-surface">
+                    {d.is_verified ? "Yes" : "No"}
+                  </td>
+                  <td className="px-md py-md font-label-sm text-label-sm text-on-surface-variant">
+                    {d.last_seen_at
+                      ? new Date(d.last_seen_at).toLocaleString()
+                      : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

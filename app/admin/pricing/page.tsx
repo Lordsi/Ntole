@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/shared/page-header";
 import { PricingEditor } from "@/components/admin/pricing-editor";
 import type { RideTier } from "@/lib/supabase/types";
 
@@ -10,5 +11,16 @@ export default async function AdminPricingPage() {
     .from("ride_tiers")
     .select("*")
     .order("sort_order");
-  return <PricingEditor tiers={(data ?? []) as RideTier[]} />;
+  const tiers = (data ?? []) as RideTier[];
+
+  return (
+    <>
+      <PageHeader
+        title="Pricing"
+        subtitle={`${tiers.length} active ride tier${tiers.length === 1 ? "" : "s"}. Changes apply immediately.`}
+        icon="paid"
+      />
+      <PricingEditor tiers={tiers} />
+    </>
+  );
 }

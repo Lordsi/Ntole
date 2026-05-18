@@ -4,11 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { MaterialIcon } from "@/components/ui/material-icon";
-import {
-  MobileShell,
-  type MobileShellNavItem,
-} from "@/components/shared/mobile-shell";
+import { RiderShell } from "@/components/shared/role-shell";
 import { cn } from "@/lib/utils/cn";
 
 import { LocationStack } from "./location-stack";
@@ -35,13 +31,6 @@ interface PendingRide {
   drop: PlaceSuggestion | null;
   selectedTierId: string;
 }
-
-const RIDER_NAV: MobileShellNavItem[] = [
-  { href: "/rider", icon: "home", label: "Home" },
-  { href: "/rider/history", icon: "history", label: "Activity" },
-  { href: "/rider/profile", icon: "account_balance_wallet", label: "Wallet" },
-  { href: "/rider/profile", icon: "person", label: "Profile" },
-];
 
 export function RiderHome({ profile, tiers }: RiderHomeProps) {
   const router = useRouter();
@@ -166,26 +155,8 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         ? "Request Ride"
         : "Send Package";
 
-  const topRight = !isAuthed ? (
-    <Link
-      href="/login?next=/rider"
-      className="inline-flex h-10 items-center rounded-full bg-primary-container px-4 text-label-md font-label-md font-bold text-on-primary-container shadow-glow transition-colors hover:bg-primary-fixed"
-    >
-      Sign in
-    </Link>
-  ) : undefined;
-
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      <AmbientMapBackdrop />
-
-      <MobileShell
-        navItems={RIDER_NAV}
-        profileHref={isAuthed ? "/rider/profile" : "/login?next=/rider"}
-        avatarName={profile?.full_name ?? "Rider"}
-        avatarSrc={profile?.avatar_url}
-        topRight={topRight}
-      >
+    <RiderShell profile={profile}>
         {/* Hero Section */}
         <section className="mb-xl">
           <h2 className="font-display-lg text-[40px] leading-tight text-primary font-extrabold tracking-tight max-w-[280px]">
@@ -279,42 +250,26 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
               {error}
             </p>
           )}
-        </div>
 
-        {/* Sticky CTA Container — sits just above the bottom nav. */}
-        <div className="fixed bottom-20 left-0 w-full px-margin-mobile py-lg z-40 pointer-events-none">
+          {/* Primary CTA sits inline at the end of the form so it never
+              overlaps the destination input or tier cards. The bottom nav
+              still floats above it because MobileShell reserves bottom
+              padding via pb-32 on <main>. */}
           <button
             type="button"
             disabled={!canRequest || requesting}
             onClick={requestRide}
             className={cn(
-              "pointer-events-auto w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-150 active:scale-95",
+              "mt-md w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-150 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
               canRequest && !requesting
                 ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.3)] neon-glow-primary"
-                : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed",
+                : "bg-surface-container-highest text-on-surface-variant",
             )}
           >
             {requestLabel}
           </button>
         </div>
-      </MobileShell>
-    </div>
+    </RiderShell>
   );
 }
 
-/**
- * Ambient dark backdrop with a radial neon halo, evoking the map glow from
- * the Stitch mock without paying for a live Leaflet tile fetch on a screen
- * that doesn't need an interactive map yet.
- */
-function AmbientMapBackdrop() {
-  return (
-    <div
-      aria-hidden
-      className="fixed inset-0 z-0 pointer-events-none bg-[#0a0c0c]"
-    >
-      <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(57,255,20,0.18)_1px,transparent_1px),radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:40px_40px,28px_28px] [background-position:0_0,14px_14px]" />
-      <div className="absolute inset-0 map-gradient-overlay" />
-    </div>
-  );
-}

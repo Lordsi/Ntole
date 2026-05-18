@@ -5,10 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
-import {
-  MobileShell,
-  type MobileShellNavItem,
-} from "@/components/shared/mobile-shell";
+import { DriverShell } from "@/components/shared/role-shell";
 import { cn } from "@/lib/utils/cn";
 import { formatDistance, formatDuration, formatMoney } from "@/lib/utils/format";
 
@@ -29,13 +26,6 @@ interface DriverHomeProps {
   tiers: RideTier[];
   activeRideId: string | null;
 }
-
-const DRIVER_NAV: MobileShellNavItem[] = [
-  { href: "/driver", icon: "dashboard", label: "Dashboard" },
-  { href: "/driver/earnings", icon: "directions_car", label: "Rides" },
-  { href: "/driver/earnings", icon: "account_balance_wallet", label: "Wallet" },
-  { href: "/driver/profile", icon: "person", label: "Profile" },
-];
 
 export function DriverHome({
   profile,
@@ -152,27 +142,7 @@ export function DriverHome({
     : "Vehicle pending";
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background">
-      {/* Faint map texture behind everything */}
-      <div
-        aria-hidden
-        className="fixed inset-0 z-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(18, 20, 20, 0.8), rgba(18, 20, 20, 0.95))",
-        }}
-      />
-      <div
-        aria-hidden
-        className="fixed inset-0 z-0 opacity-30 pointer-events-none [background-image:radial-gradient(rgba(57,255,20,0.15)_1px,transparent_1px)] [background-size:40px_40px]"
-      />
-
-      <MobileShell
-        navItems={DRIVER_NAV}
-        profileHref="/driver/profile"
-        avatarName={profile.full_name ?? "Driver"}
-        avatarSrc={profile.avatar_url}
-      >
+    <DriverShell profile={profile}>
         <div className="flex flex-col gap-lg mt-sm">
           {/* Status Card */}
           <section className="glass-panel rounded-lg p-lg flex flex-col gap-lg">
@@ -372,8 +342,7 @@ export function DriverHome({
             <MaterialIcon name="arrow_forward" />
           </Link>
         </div>
-      </MobileShell>
-    </div>
+    </DriverShell>
   );
 }
 

@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
-import { Card } from "@/components/ui/card";
-import { IconButton } from "@/components/ui/icon-button";
-import { ArrowLeftIcon } from "@/components/ui/icons";
+import { MaterialIcon } from "@/components/ui/material-icon";
+import { PageHeader } from "@/components/shared/page-header";
+import { DriverShell } from "@/components/shared/role-shell";
 import { formatMoney } from "@/lib/utils/format";
 import type { Ride } from "@/lib/supabase/types";
 
@@ -24,41 +23,80 @@ export default async function DriverEarningsPage() {
   const currency = list[0]?.currency ?? "MWK";
 
   return (
-    <div className="flex min-h-screen flex-col gap-4 p-5">
-      <header className="flex items-center gap-3">
-        <Link href="/driver">
-          <IconButton size={40}>
-            <ArrowLeftIcon className="h-4 w-4" />
-          </IconButton>
-        </Link>
-        <h1 className="text-xl font-semibold">Earnings</h1>
-      </header>
-      <Card className="flex flex-col items-center gap-2 py-8">
-        <span className="text-xs uppercase tracking-wide text-muted">
-          Total earned
+    <DriverShell profile={profile}>
+      <PageHeader
+        title="Earnings"
+        subtitle="Lifetime payouts from completed rides."
+        icon="account_balance_wallet"
+      />
+
+      {/* Hero total tile — primary container so it reads as a money-positive
+          surface. Mirrors the "GO ONLINE" hero card visually. */}
+      <section
+        className="rounded-lg p-lg flex flex-col items-center text-center gap-xs"
+        style={{
+          background:
+            "linear-gradient(150deg, rgba(57,255,20,0.18), rgba(57,255,20,0.04))",
+          boxShadow:
+            "inset 0 0 0 1px rgba(57,255,20,0.25), 0 8px 24px rgba(0,0,0,0.55)",
+        }}
+      >
+        <span className="font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
+          Total Earned
         </span>
-        <span className="text-4xl font-semibold text-accent">
+        <span className="font-display-lg text-display-lg font-extrabold text-primary-container">
           {formatMoney(total, currency)}
         </span>
-        <span className="text-xs text-muted">{list.length} completed trips</span>
-      </Card>
-      <div className="flex flex-col gap-2">
-        {list.map((r) => (
-          <Card key={r.id} className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">
-                {r.drop_address || "Trip"}
-              </span>
-              <span className="text-xs text-muted">
-                {new Date(r.completed_at ?? r.requested_at).toLocaleString()}
-              </span>
-            </div>
-            <span className="text-sm font-semibold">
-              {formatMoney(r.fare_minor, r.currency)}
-            </span>
-          </Card>
-        ))}
-      </div>
-    </div>
+        <span className="font-label-md text-label-md text-on-surface-variant">
+          {list.length} completed trip{list.length === 1 ? "" : "s"}
+        </span>
+      </section>
+
+      <section className="mt-lg">
+        <h2 className="mb-sm font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
+          Recent rides
+        </h2>
+
+        {list.length === 0 ? (
+          <div className="glass-panel rounded-md p-lg flex flex-col items-center text-center gap-sm">
+            <MaterialIcon
+              name="route"
+              className="text-on-surface-variant text-[40px]"
+            />
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              No completed rides yet. Go online to start earning.
+            </p>
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-sm">
+            {list.map((r) => (
+              <li
+                key={r.id}
+                className="glass-panel rounded-md p-md flex items-center justify-between gap-md"
+              >
+                <div className="flex flex-1 min-w-0 flex-col">
+                  <span className="font-body-md text-body-md font-semibold text-on-surface truncate">
+                    {r.drop_address || "Trip"}
+                  </span>
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">
+                    {new Date(
+                      r.completed_at ?? r.requested_at,
+                    ).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <span className="font-label-md text-label-md font-bold text-primary-container">
+                  {formatMoney(r.fare_minor, r.currency)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </DriverShell>
   );
 }

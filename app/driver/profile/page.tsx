@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
 import { Avatar } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
-import { IconButton } from "@/components/ui/icon-button";
-import { ArrowLeftIcon } from "@/components/ui/icons";
+import { RatingStars } from "@/components/ui/rating-stars";
+import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/shared/profile-form";
+import { DriverShell } from "@/components/shared/role-shell";
 import { SignOutButton } from "@/components/shared/sign-out-button";
 import { VehicleForm } from "@/components/driver/vehicle-form";
 import type { RideTier, Vehicle } from "@/lib/supabase/types";
@@ -30,33 +29,47 @@ export default async function DriverProfilePage() {
   ]);
 
   return (
-    <div className="flex min-h-screen flex-col gap-4 p-5">
-      <header className="flex items-center gap-3">
-        <Link href="/driver">
-          <IconButton size={40}>
-            <ArrowLeftIcon className="h-4 w-4" />
-          </IconButton>
-        </Link>
-        <h1 className="text-xl font-semibold">Profile</h1>
-      </header>
-      <Card className="flex items-center gap-3">
-        <Avatar name={profile!.full_name} src={profile!.avatar_url} size={64} />
-        <div className="flex flex-col">
-          <span className="text-base font-semibold">
+    <DriverShell profile={profile}>
+      <PageHeader title="Profile" subtitle="Account and vehicle settings." />
+
+      <section className="glass-panel rounded-md p-md flex items-center gap-md">
+        <Avatar
+          name={profile!.full_name}
+          src={profile!.avatar_url}
+          size={64}
+        />
+        <div className="flex flex-1 flex-col">
+          <span className="font-display-md text-display-md font-bold text-on-surface">
             {profile!.full_name || "Driver"}
           </span>
-          <span className="text-xs text-muted">
-            {profile!.trip_count} trips · rating {profile!.rating.toFixed(1)}
+          <span className="font-label-sm text-label-sm text-on-surface-variant">
+            {profile!.trip_count} completed trips
           </span>
+          <RatingStars value={profile!.rating} showValue className="mt-1" />
         </div>
-      </Card>
-      <ProfileForm profile={profile!} />
-      <VehicleForm
-        driverId={profile!.id}
-        vehicle={vehicleRes.data ?? null}
-        tiers={(tiersRes.data ?? []) as RideTier[]}
-      />
-      <SignOutButton />
-    </div>
+      </section>
+
+      <section className="mt-lg">
+        <h2 className="mb-sm font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
+          Account
+        </h2>
+        <ProfileForm profile={profile!} />
+      </section>
+
+      <section className="mt-lg">
+        <h2 className="mb-sm font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
+          Vehicle
+        </h2>
+        <VehicleForm
+          driverId={profile!.id}
+          vehicle={vehicleRes.data ?? null}
+          tiers={(tiersRes.data ?? []) as RideTier[]}
+        />
+      </section>
+
+      <div className="mt-xl">
+        <SignOutButton />
+      </div>
+    </DriverShell>
   );
 }

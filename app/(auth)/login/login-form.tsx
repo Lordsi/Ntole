@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { MaterialIcon } from "@/components/ui/material-icon";
+import { cn } from "@/lib/utils/cn";
 
 type Mode = "signin" | "signup";
 
@@ -39,16 +40,11 @@ export function LoginForm() {
           setError(error.message);
           return;
         }
-        // Refresh server components and route by role via the smart `/` entry.
         router.replace(next);
         router.refresh();
         return;
       }
 
-      // Sign up. If the Supabase project requires email confirmation, the user
-      // will be sent a verification link that lands back on /auth/callback.
-      // If confirmation is disabled, a session is returned immediately and we
-      // can redirect right away.
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ||
         (typeof window !== "undefined" ? window.location.origin : "");
@@ -85,20 +81,26 @@ export function LoginForm() {
       ? "Create account"
       : "Sign in";
 
+  const disabled = pending || !email || !password || (isSignup && !fullName);
+
   return (
-    <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-md" onSubmit={handleSubmit}>
       {isSignup && (
-        <Input
+        <Field
+          icon="badge"
+          label="Full Name"
           type="text"
           required
-          placeholder="Full name"
+          placeholder="Your name"
           autoComplete="name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
         />
       )}
 
-      <Input
+      <Field
+        icon="mail"
+        label="Email"
         type="email"
         required
         placeholder="you@example.com"
@@ -107,32 +109,43 @@ export function LoginForm() {
         onChange={(e) => setEmail(e.target.value)}
       />
 
-      <Input
+      <Field
+        icon="lock"
+        label="Password"
         type="password"
         required
         minLength={6}
-        placeholder="Password"
+        placeholder="••••••••"
         autoComplete={isSignup ? "new-password" : "current-password"}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <Button
+      <button
         type="submit"
-        size="lg"
-        fullWidth
-        disabled={pending || !email || !password || (isSignup && !fullName)}
+        disabled={disabled}
+        className={cn(
+          "mt-sm w-full py-md rounded-full font-headline-md text-headline-md font-extrabold tracking-tight transition-all duration-150 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
+          !disabled
+            ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.3)] neon-glow-primary"
+            : "bg-surface-container-highest text-on-surface-variant",
+        )}
       >
         {submitLabel}
-      </Button>
+      </button>
 
       {error && (
-        <p className="text-center text-[13px] text-danger" role="alert">
+        <p
+          className="text-center font-body-sm text-body-sm text-error"
+          role="alert"
+        >
           {error}
         </p>
       )}
       {info && (
-        <p className="text-center text-[13px] text-accent">{info}</p>
+        <p className="text-center font-body-sm text-body-sm text-primary-container">
+          {info}
+        </p>
       )}
 
       <button
@@ -142,52 +155,96 @@ export function LoginForm() {
           setError(null);
           setInfo(null);
         }}
-        className="mt-1 text-center text-[13px] text-muted transition-colors hover:text-white"
+        className="mt-xs text-center font-body-sm text-body-sm text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 rounded-full py-xs"
       >
         {isSignup ? (
           <>
             Already have an account?{" "}
-            <span className="text-accent">Sign in</span>
+            <span className="text-primary-container">Sign in</span>
           </>
         ) : (
           <>
             New to Ntole?{" "}
-            <span className="text-accent">Create an account</span>
+            <span className="text-primary-container">Create an account</span>
           </>
         )}
       </button>
 
-      <DemoCredentials />
+      <DemoCredentials onPick={setEmail} />
     </form>
   );
 }
 
-/**
- * Inline hint card listing the three seeded demo accounts so reviewers can
- * jump in without provisioning new users. Rendered in every environment —
- * the accounts only exist after `supabase db reset` runs the seed.
- */
-function DemoCredentials() {
+/* ------------------------------------------------------------------ */
+/* Glass field with leading Material Symbol + JetBrains Mono label    */
+/* ------------------------------------------------------------------ */
+
+interface FieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  icon: string;
+  label: string;
+}
+
+function Field({ icon, label, className, ...input }: FieldProps) {
+  return (
+    <label
+      className={cn(
+        "glass-panel rounded-md p-md flex items-center gap-md transition-colors focus-within:border-primary-container/40",
+        className,
+      )}
+    >
+      <MaterialIcon
+        name={icon}
+        className="text-on-surface-variant text-[20px]"
+      />
+      <div className="flex flex-1 flex-col">
+        <span className="text-label-sm font-label-sm text-on-surface-variant">
+          {label}
+        </span>
+        <input
+          {...input}
+          className="w-full bg-transparent text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none"
+        />
+      </div>
+    </label>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Demo credentials disclosure                                        */
+/* ------------------------------------------------------------------ */
+
+function DemoCredentials({ onPick }: { onPick: (email: string) => void }) {
   const accounts = [
     { label: "Rider", email: "rider@ntole.test" },
     { label: "Driver", email: "driver@ntole.test" },
     { label: "Admin", email: "admin@ntole.test" },
   ];
   return (
-    <details className="mt-4 rounded-2xl glass p-3 text-[12px] text-muted">
-      <summary className="cursor-pointer select-none text-[12px] font-semibold uppercase tracking-[0.12em] text-muted-strong">
+    <details className="mt-md rounded-md glass-panel p-md">
+      <summary className="cursor-pointer select-none font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant hover:text-on-surface">
         Demo accounts
       </summary>
-      <ul className="mt-2 flex flex-col gap-1.5">
+      <ul className="mt-sm flex flex-col gap-xs">
         {accounts.map((a) => (
-          <li key={a.email} className="flex items-center justify-between gap-3">
-            <span className="text-white">{a.label}</span>
-            <span className="font-mono text-muted-strong">{a.email}</span>
+          <li key={a.email}>
+            <button
+              type="button"
+              onClick={() => onPick(a.email)}
+              className="w-full flex items-center justify-between gap-md rounded-sm px-xs py-xs text-left hover:bg-white/5 transition-colors"
+            >
+              <span className="font-body-sm text-body-sm text-on-surface">
+                {a.label}
+              </span>
+              <span className="font-label-sm text-label-sm text-on-surface-variant">
+                {a.email}
+              </span>
+            </button>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-muted">
-        Shared password: <span className="font-mono text-white">Password123!</span>
+      <p className="mt-sm font-body-sm text-body-sm text-on-surface-variant">
+        Shared password:{" "}
+        <span className="text-on-surface">Password123!</span>
       </p>
     </details>
   );
