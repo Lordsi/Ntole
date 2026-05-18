@@ -1,14 +1,10 @@
 "use client";
 
 import Link from "next/link";
+
 import { Avatar } from "@/components/ui/avatar";
-import {
-  ChatIcon,
-  ChevronsRightIcon,
-  SeatIcon,
-  SteeringWheelIcon,
-} from "@/components/ui/icons";
-import { formatDuration, formatMoney } from "@/lib/utils/format";
+import { MaterialIcon } from "@/components/ui/material-icon";
+import { formatDuration } from "@/lib/utils/format";
 import type { Profile, Ride, RideTier, Vehicle } from "@/lib/supabase/types";
 
 interface DriverArrivingPanelProps {
@@ -19,10 +15,10 @@ interface DriverArrivingPanelProps {
 }
 
 /**
- * Bottom-anchored arrival card shown after a driver accepts but before the
- * trip starts. The card "peeks" from the bottom of the viewport with a
- * curved top edge, a neon-green header strip announcing the ETA, a glassy
- * driver summary, and a dark pill-shaped action row for chatting.
+ * Bottom-sheet driver arrival panel from Stitch's rider_trip_status mock.
+ * Pulsing neon strip at the top ("driver will arrive in N mins"), driver
+ * portrait with rating badge, white pill plate, and an action row of
+ * Chat / Call / Cancel.
  */
 export function DriverArrivingPanel({
   ride,
@@ -31,76 +27,102 @@ export function DriverArrivingPanel({
   vehicle,
 }: DriverArrivingPanelProps) {
   const plate = vehicle?.plate_number ?? "AB6299ZG";
-  const carLabel = vehicle ? `${vehicle.make} ${vehicle.model}` : "Honda CRV";
+  const carLabel = vehicle ? `${vehicle.make} ${vehicle.model}` : "Honda CR-V";
+  const eta = formatDuration(ride.quoted_duration_min);
+  const rating = driver.rating ? driver.rating.toFixed(1) : "5.0";
 
   return (
-    <div className="overflow-hidden rounded-t-3xl glass-strong shadow-sheet">
-      {/* Neon header strip: arrival announcement + ETA pill. */}
-      <div className="flex items-center justify-between bg-accent px-5 py-3 text-black">
-        <span className="text-[14px] font-semibold tracking-[-0.01em]">
-          The driver will arrive in
-        </span>
-        <span className="rounded-full bg-black/90 px-3 py-1 text-[12px] font-bold tracking-tight text-accent">
-          {formatDuration(ride.quoted_duration_min)}
+    <div className="relative bg-surface-container-low rounded-t-lg shadow-[0_-10px_40px_rgba(0,0,0,0.6)] border-t border-white/5">
+      {/* Drag handle */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-outline-variant/40" />
+
+      {/* Arrival header strip with a pulsing dot */}
+      <div className="flex items-center justify-center gap-sm py-sm border-b border-outline-variant/20">
+        <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_8px_#39ff14]" />
+        <span className="text-label-md font-label-md text-primary-fixed">
+          The driver will arrive in {eta}
         </span>
       </div>
 
-      <div className="flex flex-col gap-4 p-4">
-        {/* Driver identity block with prominent plate badge. */}
-        <div className="flex items-center gap-3 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-white/[0.04]">
-          <Avatar name={driver.full_name} src={driver.avatar_url} size={48} />
-          <div className="flex flex-1 flex-col leading-tight">
-            <span className="text-[15px] font-semibold tracking-[-0.01em]">
-              {driver.full_name || "Your driver"}
-            </span>
-            <span className="text-[12px] text-muted">{carLabel}</span>
-          </div>
-          <span className="rounded-full bg-white px-3 py-1.5 font-mono text-[12px] font-bold tracking-[0.08em] text-background shadow-[0_2px_8px_rgba(255,255,255,0.18)]">
-            {plate}
-          </span>
-        </div>
-
-        {/* Ride summary row: tier + ETA + seats + price badge. */}
+      <div className="px-margin-mobile pt-lg pb-xl space-y-lg">
+        {/* Driver row */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 text-[13px]">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-white/5 ring-1 ring-white/5">
-              <SteeringWheelIcon className="h-4 w-4" />
-            </span>
-            <span className="font-semibold tracking-[-0.01em]">
-              {tier.name}
-            </span>
-            <span className="text-muted">•</span>
-            <span className="text-muted">
-              {formatDuration(ride.quoted_duration_min)}
-            </span>
-            <span className="ml-1 inline-flex items-center gap-1 text-muted">
-              <SeatIcon className="h-3.5 w-3.5" />
-              <span>{tier.seats}</span>
-            </span>
+          <div className="flex items-center gap-md">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-outline-variant">
+                <Avatar
+                  name={driver.full_name ?? "Driver"}
+                  src={driver.avatar_url}
+                  size={60}
+                />
+              </div>
+              <div className="absolute -bottom-1 -right-1 bg-surface-container-highest rounded-full px-sm border border-outline-variant">
+                <p className="text-[10px] font-bold text-primary-container">
+                  {rating}★
+                </p>
+              </div>
+            </div>
+            <div>
+              <h2 className="text-headline-md font-headline-md text-on-surface">
+                {driver.full_name?.split(" ")[0] ?? "Your driver"}
+              </h2>
+              <p className="text-body-md font-body-md text-on-surface-variant">
+                {carLabel} • {tier.name}
+              </p>
+            </div>
           </div>
-          <span className="rounded-full bg-accent px-3 py-1.5 text-[13px] font-bold tracking-tight text-black shadow-glow">
-            {formatMoney(ride.fare_minor, ride.currency)}
-          </span>
+
+          {/* License plate */}
+          <div className="bg-white px-md py-xs rounded-full shadow-lg">
+            <p className="text-black font-bold font-label-md tracking-widest">
+              {plate}
+            </p>
+          </div>
         </div>
 
-        {/* Action row: full-width dark pill with green chat circle + swipe
-            chevrons. Distinct from a primary CTA: this is a tertiary action
-            that doubles as a "tap to chat" affordance. */}
-        <Link
-          href={`/rider/ride/${ride.id}/chat`}
-          className="group flex h-14 items-center justify-between rounded-full bg-white/[0.06] pl-2 pr-5 ring-1 ring-white/[0.06] transition-colors hover:bg-white/[0.09]"
-        >
-          <span className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-black shadow-glow">
-              <ChatIcon className="h-4 w-4" />
-            </span>
-            <span className="text-[14px] font-semibold tracking-[-0.01em] text-white">
-              Chat with driver
-            </span>
-          </span>
-          <ChevronsRightIcon className="h-5 w-5 text-muted transition-transform duration-200 group-hover:translate-x-1" />
-        </Link>
+        {/* Action row */}
+        <div className="flex gap-md">
+          <Link
+            href={`/rider/ride/${ride.id}/chat`}
+            className="flex-1 bg-surface-container-highest text-on-surface py-md rounded-full font-headline-md text-center active:scale-95 transition-all border border-outline-variant/30 flex items-center justify-center gap-sm"
+          >
+            <MaterialIcon name="chat_bubble" className="text-[20px]" />
+            Chat with driver
+          </Link>
+          <button
+            type="button"
+            aria-label="Call driver"
+            className="w-14 h-14 bg-surface-container-highest rounded-full flex items-center justify-center border border-outline-variant/30 active:scale-95 transition-all"
+          >
+            <MaterialIcon name="call" className="text-on-surface" />
+          </button>
+          <CancelRideButton rideId={ride.id} />
+        </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Red circular cancel button. Posts to /api/rides/{id} with action: "cancel"
+ * and lets the realtime subscription update the parent view automatically.
+ */
+function CancelRideButton({ rideId }: { rideId: string }) {
+  async function cancel() {
+    await fetch(`/api/rides/${rideId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "cancel" }),
+    });
+  }
+  return (
+    <button
+      type="button"
+      aria-label="Cancel ride"
+      onClick={cancel}
+      className="w-14 h-14 bg-error-container/20 rounded-full flex items-center justify-center border border-error/20 active:scale-95 transition-all"
+    >
+      <MaterialIcon name="close" className="text-error" />
+    </button>
   );
 }

@@ -8,9 +8,9 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const VARIANTS: Record<CardVariant, string> = {
-  solid: "bg-surface border border-white/[0.05]",
-  glass: "glass shadow-card",
-  "glass-strong": "glass-strong shadow-sheet",
+  solid: "bg-surface-container-low border border-white/[0.05]",
+  glass: "glass-panel shadow-card",
+  "glass-strong": "glass-panel-strong shadow-sheet",
 };
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(

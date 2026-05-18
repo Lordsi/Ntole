@@ -1,7 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils/cn";
-import { SwapIcon } from "@/components/ui/icons";
+import { MaterialIcon } from "@/components/ui/material-icon";
 import type { PlaceSuggestion } from "@/lib/maps/types";
 
 import { LocationInput } from "./location-input";
@@ -11,20 +10,20 @@ interface LocationStackProps {
   drop: PlaceSuggestion | null;
   onPickupChange: (value: PlaceSuggestion | null) => void;
   onDropChange: (value: PlaceSuggestion | null) => void;
-  className?: string;
 }
 
 /**
- * Apple Maps-style grouped destination input: two flush rows sharing a single
- * surface, with a fine divider between them and the swap button slotted into
- * the divider track on the right.
+ * The pickup / destination input stack from Stitch's rider_request_a_ride
+ * mock. Renders a glass-panel container with two rows: a hollow grey
+ * pickup indicator connected by a dotted line to a solid neon-green
+ * destination indicator. A circular swap button is anchored to the
+ * right edge.
  */
 export function LocationStack({
   pickup,
   drop,
   onPickupChange,
   onDropChange,
-  className,
 }: LocationStackProps) {
   function swap() {
     onPickupChange(drop);
@@ -32,38 +31,49 @@ export function LocationStack({
   }
 
   return (
-    <div
-      className={cn(
-        "relative rounded-3xl glass shadow-card overflow-hidden",
-        className,
-      )}
-    >
-      <LocationInput
-        flush
-        variant="pickup"
-        placeholder="Add a pick-up location"
-        value={pickup}
-        onChange={onPickupChange}
-      />
+    <div className="glass-panel rounded-lg p-lg relative overflow-hidden">
+      <div className="flex flex-col gap-md">
+        {/* Pickup */}
+        <div className="flex items-center gap-md">
+          <div className="w-6 flex flex-col items-center">
+            <div className="w-3 h-3 rounded-full border-2 border-outline-variant bg-surface" />
+            <div className="w-px h-10 border-l-2 border-dotted border-outline-variant my-xs" />
+          </div>
+          <div className="flex-1">
+            <LocationInput
+              variant="pickup"
+              label="Pickup Location"
+              placeholder="Add a pick-up location"
+              value={pickup}
+              onChange={onPickupChange}
+            />
+          </div>
+        </div>
 
-      {/* Hairline divider, indented under the indicator column. */}
-      <div className="ml-[52px] h-px bg-white/10" />
-
-      <LocationInput
-        flush
-        variant="drop"
-        placeholder="Add your destination"
-        value={drop}
-        onChange={onDropChange}
-      />
+        {/* Destination */}
+        <div className="flex items-center gap-md">
+          <div className="w-6 flex flex-col items-center">
+            <div className="w-3 h-3 rounded-full bg-primary-container neon-glow-primary" />
+          </div>
+          <div className="flex-1">
+            <LocationInput
+              variant="drop"
+              label="Destination"
+              placeholder="Add your destination"
+              value={drop}
+              onChange={onDropChange}
+            />
+          </div>
+        </div>
+      </div>
 
       <button
         type="button"
         onClick={swap}
         aria-label="Swap pickup and destination"
-        className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-surface-2/90 text-white ring-1 ring-white/10 backdrop-blur-md transition-[background-color,transform] duration-150 hover:bg-surface-3 active:scale-95"
+        className="absolute right-gutter top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass-panel flex items-center justify-center text-primary-container border-primary-container/40 active:scale-90 transition-transform"
       >
-        <SwapIcon className="h-4 w-4" />
+        <MaterialIcon name="swap_vert" />
       </button>
     </div>
   );

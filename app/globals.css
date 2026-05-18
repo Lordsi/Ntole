@@ -9,44 +9,91 @@
 html,
 body {
   height: 100%;
-  /* Rich, slightly cool near-black with a subtle vignette glow that hints at
-     the neon accent without competing with foreground surfaces. */
-  background-color: #0b0c10;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(40, 199, 111, 0.08), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(40, 199, 111, 0.05), transparent 60%);
-  background-attachment: fixed;
-  color: #ffffff;
+  background-color: #121414;
+  color: #e2e2e2;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  letter-spacing: -0.01em;
 }
 
 * {
-  border-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 ::selection {
-  background-color: rgba(40, 199, 111, 0.32);
+  background-color: rgba(57, 255, 20, 0.32);
+  color: #053900;
 }
 
-/* Scrollbar styling for dark theme */
+/* Material Symbols default weight/optical-size tuned for our UI. */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stitch helpers — these are referenced verbatim from the HTML mocks */
+/* ------------------------------------------------------------------ */
+
+.glass-panel,
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-panel-strong {
+  background: rgba(15, 17, 17, 0.78);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Neon glow halos around interactive accents. */
+.neon-glow-primary {
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
+}
+.neon-glow-intense {
+  box-shadow: 0 0 30px rgba(57, 255, 20, 0.6);
+}
+.neon-glow {
+  box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+}
+.neon-glow-strong {
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+}
+.neon-line {
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+}
+
+/* Route line drop-shadow for SVG strokes on the map. */
+.route-line {
+  filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.8));
+}
+
+/* Radial fade-to-background used behind ambient map images. */
+.map-gradient-overlay {
+  background: radial-gradient(circle at center, transparent 0%, #121414 100%);
+}
+
+/* ------------------------------------------------------------------ */
+/* Scrollbar styling                                                  */
+/* ------------------------------------------------------------------ */
+
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 *::-webkit-scrollbar-track {
-  background: transparent;
+  background: #121414;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: #333535;
+  border-radius: 3px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: #4a4949;
 }
 
-/* Hide scrollbar utility for horizontal tier carousel */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -55,44 +102,33 @@ body {
   scrollbar-width: none;
 }
 
-/* Leaflet overrides for dark theme */
+/* ------------------------------------------------------------------ */
+/* Leaflet — dark map tuned to the Stitch background palette          */
+/* ------------------------------------------------------------------ */
+
 .leaflet-container {
-  background: #0b0c10 !important;
+  background: #0a0c0c !important;
   font-family: inherit;
 }
 .leaflet-tile {
-  filter: brightness(0.65) invert(1) contrast(0.95) hue-rotate(190deg)
-    saturate(0.2) brightness(0.85);
+  filter: brightness(0.6) invert(1) contrast(1) hue-rotate(180deg)
+    saturate(0.25) brightness(0.85);
 }
 .leaflet-control-attribution {
-  background: rgba(11, 12, 16, 0.7) !important;
-  color: #8b8f99 !important;
+  background: rgba(18, 20, 20, 0.7) !important;
+  color: #baccb0 !important;
   font-size: 10px !important;
   backdrop-filter: blur(8px);
 }
 .leaflet-control-attribution a {
-  color: #28c76f !important;
+  color: #39ff14 !important;
 }
 .leaflet-control-zoom a {
-  background: rgba(21, 23, 28, 0.85) !important;
-  color: #fff !important;
+  background: rgba(30, 32, 32, 0.85) !important;
+  color: #e2e2e2 !important;
   border-color: rgba(255, 255, 255, 0.06) !important;
   backdrop-filter: blur(8px);
 }
 .leaflet-control-zoom a:hover {
-  background: rgba(30, 33, 40, 0.95) !important;
-}
-
-/* Glassmorphism utility used by floating cards and bottom sheets. */
-.glass {
-  background-color: rgba(21, 23, 28, 0.72);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-.glass-strong {
-  background-color: rgba(15, 17, 22, 0.82);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(40, 42, 43, 0.95) !important;
 }

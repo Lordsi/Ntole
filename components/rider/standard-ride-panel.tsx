@@ -36,7 +36,7 @@ export function StandardRidePanel({
   const safety = Math.max(10, Math.min(100, driver.safety_rating ?? 98));
 
   return (
-    <div className="overflow-hidden rounded-t-3xl glass-strong shadow-sheet">
+    <div className="overflow-hidden rounded-t-lg glass-panel-strong shadow-sheet">
       {/* Drag handle */}
       <div className="flex justify-center pt-2.5">
         <span className="h-1 w-10 rounded-full bg-white/15" />

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { RideMap } from "@/components/map";
-import { IconButton } from "@/components/ui/icon-button";
-import { ArrowLeftIcon, MapPinIcon } from "@/components/ui/icons";
 import { Avatar } from "@/components/ui/avatar";
+import { MaterialIcon } from "@/components/ui/material-icon";
 
 import { DriverArrivingPanel } from "./driver-arriving-panel";
 import { StandardRidePanel } from "./standard-ride-panel";
@@ -25,7 +24,11 @@ interface RiderRideViewProps {
   riderId: string;
 }
 
-export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps) {
+export function RiderRideView({
+  initialRide,
+  tier,
+  riderId,
+}: RiderRideViewProps) {
   const ride = useRide(initialRide);
   const router = useRouter();
 
@@ -34,7 +37,6 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
 
   const driverCoords = useDriverLocation(ride.driver_id);
 
-  // Fetch driver + vehicle info once a driver has accepted.
   useEffect(() => {
     if (!ride.driver_id) {
       setDriver(null);
@@ -61,41 +63,45 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
   const pickup = { lat: ride.pickup_lat, lng: ride.pickup_lng };
   const drop = { lat: ride.drop_lat, lng: ride.drop_lng };
 
-  const showStandardPanel = useMemo(
-    () => ride.status === "in_progress" || ride.status === "en_route_to_pickup",
-    [ride.status],
-  );
+  const showStandardPanel =
+    ride.status === "in_progress" || ride.status === "en_route_to_pickup";
 
-  // State 3 ("in-trip") gets a more zoomed-in / immersive look. Earlier
-  // states keep the floating top route summary visible above the map.
+  // The minimized top "Current → Dest" summary is shown while we're waiting
+  // for a driver and during the arrival phase. It hides during the in-trip
+  // and terminal states where the bottom panel takes over the screen.
   const showFloatingRouteSummary =
     ride.status === "requested" || ride.status === "accepted";
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <div className="absolute inset-0 -z-0">
+    <div className="fixed inset-0 z-0 overflow-hidden font-body-md text-on-surface">
+      {/* Background Map Layer */}
+      <div className="absolute inset-0 z-0">
         <RideMap
           pickup={pickup}
           drop={drop}
           driver={driverCoords}
           className="h-full w-full"
         />
-        {/* Soft top/bottom vignette to anchor the floating UI without a hard
-            edge that fights the map. */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/70 via-transparent to-background/60" />
       </div>
 
-      <header className="z-10 flex items-center justify-between p-5">
-        <Link href="/rider">
-          <IconButton aria-label="Back" size={44}>
-            <ArrowLeftIcon className="h-5 w-5" />
-          </IconButton>
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-margin-mobile py-md flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent backdrop-blur-sm">
+        <Link
+          href="/rider"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-surface-container-high/80 backdrop-blur-md border border-white/10 active:scale-95 transition-transform"
+          aria-label="Back"
+        >
+          <MaterialIcon name="arrow_back" className="text-on-surface" />
         </Link>
-        <span className="rounded-full ring-1 ring-white/10">
+        <Link
+          href="/rider/profile"
+          className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary-container neon-glow-primary block"
+        >
           <Avatar name="You" size={44} />
-        </span>
+        </Link>
       </header>
 
+      {/* Top summary glass card — only while waiting / accepted. */}
       {showFloatingRouteSummary && (
         <FloatingRouteSummary
           pickupAddress={ride.pickup_address}
@@ -103,7 +109,8 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
         />
       )}
 
-      <div className="z-10 mt-auto flex flex-col gap-3 p-4">
+      {/* Bottom panel switches based on ride status. */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
         {ride.status === "requested" && (
           <WaitingForMatchPanel
             ride={ride}
@@ -137,9 +144,9 @@ export function RiderRideView({ initialRide, tier, riderId }: RiderRideViewProps
 }
 
 /**
- * Minimized version of the home screen's LocationStack — used as a floating
- * pill over the map so the route is always glanceable while you're waiting
- * for or meeting your driver.
+ * Floating "Current → Destination" glass card hovering near the top of the
+ * viewport. Two-dot-with-dotted-line indicator on the left, two address
+ * rows on the right, "expand" affordance on the far right.
  */
 function FloatingRouteSummary({
   pickupAddress,
@@ -149,42 +156,37 @@ function FloatingRouteSummary({
   dropAddress?: string | null;
 }) {
   return (
-    <div className="z-10 mx-4 mt-1 overflow-hidden rounded-3xl glass shadow-card">
-      <Row
-        indicator={
-          <span className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_0_4px_rgba(40,199,111,0.2)]" />
-        }
-        label={pickupAddress || "Pickup location"}
-      />
-      <div className="ml-[52px] h-px bg-white/10" />
-      <Row
-        indicator={<MapPinIcon className="h-3.5 w-3.5 text-white" />}
-        label={dropAddress || "Destination"}
-      />
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px]">
+      <div className="glass-card rounded-lg p-md flex items-center gap-md">
+        <div className="flex flex-col items-center gap-xs">
+          <div className="w-2 h-2 rounded-full bg-outline" />
+          <div className="w-0.5 h-6 bg-outline-variant/30" />
+          <div className="w-2 h-2 rounded-full bg-primary-container" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <p className="text-label-sm font-label-sm text-on-surface-variant line-clamp-1">
+            Current: {pickupAddress || "Pickup location"}
+          </p>
+          <p className="text-label-sm font-label-sm text-on-surface line-clamp-1 font-bold">
+            Dest: {dropAddress || "Destination"}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Expand details"
+          className="p-sm text-on-surface-variant hover:text-primary-container transition-colors"
+        >
+          <MaterialIcon name="expand_more" />
+        </button>
+      </div>
     </div>
   );
 }
 
-function Row({
-  indicator,
-  label,
-}: {
-  indicator: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="flex h-12 items-center gap-3 px-4">
-      <span className="grid h-6 w-6 shrink-0 place-items-center">
-        {indicator}
-      </span>
-      <span className="line-clamp-1 flex-1 text-[14px] font-medium text-white">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-async function cancelRide(rideId: string, router: ReturnType<typeof useRouter>) {
+async function cancelRide(
+  rideId: string,
+  router: ReturnType<typeof useRouter>,
+) {
   await fetch(`/api/rides/${rideId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

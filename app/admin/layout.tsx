@@ -1,38 +1,49 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { requireRole } from "@/lib/auth/session";
-import { SignOutButton } from "@/components/shared/sign-out-button";
 
-const NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/users", label: "Users" },
-  { href: "/admin/drivers", label: "Drivers" },
-  { href: "/admin/rides", label: "Rides" },
-  { href: "/admin/pricing", label: "Pricing" },
-];
+import { requireRole } from "@/lib/auth/session";
+import { MaterialIcon } from "@/components/ui/material-icon";
+import { Avatar } from "@/components/ui/avatar";
+
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  await requireRole("admin");
+  const { profile } = await requireRole("admin");
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-6 py-6">
-      <header className="flex items-center justify-between">
-        <Link href="/admin" className="text-lg font-semibold tracking-tight">
-          Ntole <span className="text-accent">admin</span>
-        </Link>
-        <SignOutButton />
-      </header>
-      <nav className="flex gap-2 overflow-x-auto rounded-pill bg-surface p-1 ring-1 ring-white/5 no-scrollbar">
-        {NAV.map((n) => (
-          <Link
-            key={n.href}
-            href={n.href}
-            className="whitespace-nowrap rounded-pill px-4 py-2 text-sm text-muted-strong hover:bg-white/5 hover:text-white"
+    <div className="min-h-screen bg-background text-on-background font-body-md">
+      <AdminSidebar />
+
+      <main className="ml-64 p-lg pb-xl min-h-screen">
+        {/* Right-aligned utility chrome — notifications + admin profile pill.
+            Per-page titles render below as part of `children`. */}
+        <header className="flex justify-end items-center gap-md mb-lg">
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="glass-panel p-sm rounded-lg flex items-center gap-sm hover:bg-white/10 transition-colors"
           >
-            {n.label}
+            <MaterialIcon
+              name="notifications"
+              className="text-primary-container"
+            />
+          </button>
+          <Link
+            href="/admin"
+            className="flex items-center gap-sm glass-panel py-xs px-md rounded-full border border-white/10"
+          >
+            <div className="w-8 h-8 rounded-full overflow-hidden">
+              <Avatar
+                name={profile?.full_name ?? "Admin"}
+                src={profile?.avatar_url}
+                size={32}
+              />
+            </div>
+            <span className="font-label-md text-label-md">Admin Portal</span>
           </Link>
-        ))}
-      </nav>
-      <main className="flex-1">{children}</main>
+        </header>
+
+        {children}
+      </main>
     </div>
   );
 }

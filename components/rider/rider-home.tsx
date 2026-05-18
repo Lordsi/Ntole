@@ -4,17 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { IconButton } from "@/components/ui/icon-button";
-import { PillToggle } from "@/components/ui/pill-toggle";
-import { RatingStars } from "@/components/ui/rating-stars";
+import { MaterialIcon } from "@/components/ui/material-icon";
 import {
-  BellIcon,
-  MenuIcon,
-  PackageIcon,
-  SteeringWheelIcon,
-} from "@/components/ui/icons";
+  MobileShell,
+  type MobileShellNavItem,
+} from "@/components/shared/mobile-shell";
+import { cn } from "@/lib/utils/cn";
 
 import { LocationStack } from "./location-stack";
 import { TierCard } from "./tier-card";
@@ -32,8 +27,6 @@ interface QuoteRow {
   fare: { total_minor: number; currency: string };
 }
 
-// Form state we persist across the sign-in round-trip so anonymous users
-// don't have to re-enter pickup/drop after they log in.
 const PENDING_RIDE_STORAGE_KEY = "ntole.pendingRide";
 
 interface PendingRide {
@@ -42,6 +35,13 @@ interface PendingRide {
   drop: PlaceSuggestion | null;
   selectedTierId: string;
 }
+
+const RIDER_NAV: MobileShellNavItem[] = [
+  { href: "/rider", icon: "home", label: "Home" },
+  { href: "/rider/history", icon: "history", label: "Activity" },
+  { href: "/rider/profile", icon: "account_balance_wallet", label: "Wallet" },
+  { href: "/rider/profile", icon: "person", label: "Profile" },
+];
 
 export function RiderHome({ profile, tiers }: RiderHomeProps) {
   const router = useRouter();
@@ -60,7 +60,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // After signing in, restore any ride form the user was building.
+  // Restore in-progress form after a sign-in round-trip.
   useEffect(() => {
     if (!isAuthed || typeof window === "undefined") return;
     const raw = window.sessionStorage.getItem(PENDING_RIDE_STORAGE_KEY);
@@ -116,7 +116,6 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
     return map;
   }, [quotes]);
 
-  // Stash the in-progress form so it survives the trip through /login.
   function persistPendingRide() {
     if (typeof window === "undefined") return;
     const payload: PendingRide = { mode, pickup, drop, selectedTierId };
@@ -162,154 +161,160 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
       ? "Sign in to request ride"
       : "Sign in to send package"
     : requesting
-      ? "Requesting..."
+      ? "Requesting…"
       : mode === "driver"
-        ? "Request ride"
-        : "Send package";
+        ? "Request Ride"
+        : "Send Package";
+
+  const topRight = !isAuthed ? (
+    <Link
+      href="/login?next=/rider"
+      className="inline-flex h-10 items-center rounded-full bg-primary-container px-4 text-label-md font-label-md font-bold text-on-primary-container shadow-glow transition-colors hover:bg-primary-fixed"
+    >
+      Sign in
+    </Link>
+  ) : undefined;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-6 px-5 pb-6 pt-5">
-      <header className="flex items-center justify-between">
-        <IconButton aria-label="Menu" size={44}>
-          <MenuIcon className="h-[18px] w-[18px]" />
-        </IconButton>
-        <div className="flex items-center gap-2.5">
-          <IconButton aria-label="Notifications" size={44}>
-            <BellIcon className="h-[18px] w-[18px]" />
-          </IconButton>
-          {isAuthed ? (
-            <Link href="/rider/profile" aria-label="Profile" className="rounded-full ring-1 ring-white/10">
-              <Avatar
-                name={profile.full_name || "Rider"}
-                src={profile.avatar_url}
-                size={44}
-              />
-            </Link>
-          ) : (
-            <Link
-              href="/login?next=/rider"
-              className="inline-flex h-11 items-center rounded-full bg-accent px-4 text-[14px] font-semibold tracking-[-0.01em] text-black shadow-glow transition-colors hover:bg-accent-hover"
-            >
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
+    <div className="relative min-h-screen overflow-x-hidden">
+      <AmbientMapBackdrop />
 
-      <div className="flex flex-col gap-2">
-        <h1 className="text-[40px] font-bold leading-[1.02] tracking-[-0.03em]">
-          Where do you{" "}
-          <span className="text-muted-strong/80">want to go?</span>
-        </h1>
-        {!isAuthed && (
-          <p className="text-[15px] text-muted">
-            Preview fares as a guest.{" "}
-            <Link
-              href="/login?next=/rider"
-              className="text-accent transition-colors hover:text-accent-hover"
-            >
-              Sign in
-            </Link>{" "}
-            to book.
-          </p>
-        )}
-      </div>
-
-      {/* Optional active-driver banner — shown for authenticated riders as a
-          quick reminder that they have a previous driver they liked. Hidden
-          for guests so the empty state stays clean. */}
-      {isAuthed && <ActiveDriverBanner name={profile.full_name} />}
-
-      <LocationStack
-        pickup={pickup}
-        drop={drop}
-        onPickupChange={setPickup}
-        onDropChange={setDrop}
-      />
-
-      <PillToggle
-        value={mode}
-        onChange={setMode}
-        options={[
-          {
-            value: "driver",
-            label: "Driver",
-            icon: <SteeringWheelIcon className="h-4 w-4" />,
-          },
-          {
-            value: "package",
-            label: "Package",
-            icon: <PackageIcon className="h-4 w-4" />,
-          },
-        ]}
-      />
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.18em] text-muted">
-            Choose a Ride
+      <MobileShell
+        navItems={RIDER_NAV}
+        profileHref={isAuthed ? "/rider/profile" : "/login?next=/rider"}
+        avatarName={profile?.full_name ?? "Rider"}
+        avatarSrc={profile?.avatar_url}
+        topRight={topRight}
+      >
+        {/* Hero Section */}
+        <section className="mb-xl">
+          <h2 className="font-display-lg text-[40px] leading-tight text-primary font-extrabold tracking-tight max-w-[280px]">
+            Where do you want to go?
           </h2>
-          {distanceKm !== undefined && durationMin !== undefined && (
-            <span className="text-[12px] text-muted">
-              {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min
-            </span>
+          {!isAuthed && (
+            <p className="mt-sm text-body-md text-on-surface-variant">
+              Preview fares as a guest.{" "}
+              <Link
+                href="/login?next=/rider"
+                className="text-primary-container hover:underline"
+              >
+                Sign in
+              </Link>{" "}
+              to book.
+            </p>
+          )}
+        </section>
+
+        {/* Main Interaction Hub */}
+        <div className="flex flex-col gap-lg">
+          {/* Ride/Package Toggle */}
+          <div className="flex justify-center">
+            <div className="bg-surface-container-highest p-xs rounded-full flex w-full max-w-[320px]">
+              <button
+                type="button"
+                onClick={() => setMode("driver")}
+                className={cn(
+                  "flex-1 py-sm rounded-full font-label-md text-label-md transition-all",
+                  mode === "driver"
+                    ? "bg-primary-container text-on-primary-container font-bold shadow-lg shadow-primary-container/20"
+                    : "text-on-surface-variant hover:text-on-surface",
+                )}
+              >
+                Driver
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("package")}
+                className={cn(
+                  "flex-1 py-sm rounded-full font-label-md text-label-md transition-all",
+                  mode === "package"
+                    ? "bg-primary-container text-on-primary-container font-bold shadow-lg shadow-primary-container/20"
+                    : "text-on-surface-variant hover:text-on-surface",
+                )}
+              >
+                Package
+              </button>
+            </div>
+          </div>
+
+          {/* LocationStack Card */}
+          <LocationStack
+            pickup={pickup}
+            drop={drop}
+            onPickupChange={setPickup}
+            onDropChange={setDrop}
+          />
+
+          {/* Ride Carousel Section */}
+          <section className="mt-md">
+            <div className="flex justify-between items-center mb-md">
+              <h3 className="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase">
+                Choose a Ride
+              </h3>
+              {distanceKm !== undefined && durationMin !== undefined && (
+                <span className="font-label-sm text-label-sm text-on-surface-variant">
+                  {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min
+                </span>
+              )}
+            </div>
+            <div className="flex gap-md overflow-x-auto pb-md no-scrollbar snap-x">
+              {tiers.map((tier) => (
+                <TierCard
+                  key={tier.id}
+                  tier={tier}
+                  active={tier.id === selectedTierId}
+                  onClick={() => setSelectedTierId(tier.id)}
+                  fareMinor={fareByTier.get(tier.id)}
+                  loading={loadingQuote && pickup !== null && drop !== null}
+                />
+              ))}
+            </div>
+          </section>
+
+          {error && (
+            <p
+              className="font-label-md text-label-md text-error"
+              role="alert"
+            >
+              {error}
+            </p>
           )}
         </div>
-        <div className="-mx-5 overflow-x-auto px-5 no-scrollbar">
-          <div className="flex gap-3 pb-1">
-            {tiers.map((tier) => (
-              <TierCard
-                key={tier.id}
-                tier={tier}
-                active={tier.id === selectedTierId}
-                onClick={() => setSelectedTierId(tier.id)}
-                fareMinor={fareByTier.get(tier.id)}
-                durationMin={durationMin}
-                loading={loadingQuote && pickup !== null && drop !== null}
-              />
-            ))}
-          </div>
+
+        {/* Sticky CTA Container — sits just above the bottom nav. */}
+        <div className="fixed bottom-20 left-0 w-full px-margin-mobile py-lg z-40 pointer-events-none">
+          <button
+            type="button"
+            disabled={!canRequest || requesting}
+            onClick={requestRide}
+            className={cn(
+              "pointer-events-auto w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-150 active:scale-95",
+              canRequest && !requesting
+                ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.3)] neon-glow-primary"
+                : "bg-surface-container-highest text-on-surface-variant cursor-not-allowed",
+            )}
+          >
+            {requestLabel}
+          </button>
         </div>
-      </div>
-
-      {error && (
-        <p className="text-[13px] text-danger" role="alert">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-auto pt-2">
-        <Button
-          fullWidth
-          size="lg"
-          disabled={!canRequest || requesting}
-          onClick={requestRide}
-        >
-          {requestLabel}
-        </Button>
-      </div>
+      </MobileShell>
     </div>
   );
 }
 
 /**
- * Compact "you recently rode with…" banner. Pure presentational right now —
- * a future iteration can pull the most recent completed ride from the API.
+ * Ambient dark backdrop with a radial neon halo, evoking the map glow from
+ * the Stitch mock without paying for a live Leaflet tile fetch on a screen
+ * that doesn't need an interactive map yet.
  */
-function ActiveDriverBanner({ name }: { name?: string | null }) {
-  const firstName = name?.split(" ")[0] ?? "there";
+function AmbientMapBackdrop() {
   return (
-    <div className="flex items-center gap-3 rounded-2xl glass px-3 py-2.5 shadow-card">
-      <Avatar name="Ucok Behel" size={36} />
-      <div className="flex flex-1 flex-col leading-tight">
-        <span className="text-[13px] font-semibold tracking-[-0.01em]">
-          Welcome back, {firstName}
-        </span>
-        <span className="text-[11px] text-muted">
-          Last ride · Ucok Behel · Honda CRV
-        </span>
-      </div>
-      <RatingStars value={5} size={11} />
+    <div
+      aria-hidden
+      className="fixed inset-0 z-0 pointer-events-none bg-[#0a0c0c]"
+    >
+      <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(57,255,20,0.18)_1px,transparent_1px),radial-gradient(rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:40px_40px,28px_28px] [background-position:0_0,14px_14px]" />
+      <div className="absolute inset-0 map-gradient-overlay" />
     </div>
   );
 }

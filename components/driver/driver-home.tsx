@@ -4,17 +4,23 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { IconButton } from "@/components/ui/icon-button";
-import { MenuIcon, BellIcon, SteeringWheelIcon } from "@/components/ui/icons";
-import { RatingStars } from "@/components/ui/rating-stars";
+import { MaterialIcon } from "@/components/ui/material-icon";
+import {
+  MobileShell,
+  type MobileShellNavItem,
+} from "@/components/shared/mobile-shell";
+import { cn } from "@/lib/utils/cn";
 import { formatDistance, formatDuration, formatMoney } from "@/lib/utils/format";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useDriverLocationPublisher } from "@/lib/realtime/use-driver-location";
-import type { Driver, Profile, Ride, RideTier, Vehicle } from "@/lib/supabase/types";
+import type {
+  Driver,
+  Profile,
+  Ride,
+  RideTier,
+  Vehicle,
+} from "@/lib/supabase/types";
 
 interface DriverHomeProps {
   profile: Profile;
@@ -23,6 +29,13 @@ interface DriverHomeProps {
   tiers: RideTier[];
   activeRideId: string | null;
 }
+
+const DRIVER_NAV: MobileShellNavItem[] = [
+  { href: "/driver", icon: "dashboard", label: "Dashboard" },
+  { href: "/driver/earnings", icon: "directions_car", label: "Rides" },
+  { href: "/driver/earnings", icon: "account_balance_wallet", label: "Wallet" },
+  { href: "/driver/profile", icon: "person", label: "Profile" },
+];
 
 export function DriverHome({
   profile,
@@ -36,10 +49,9 @@ export function DriverHome({
   const [busy, setBusy] = useState(false);
   const [incoming, setIncoming] = useState<Ride[]>([]);
 
-  // Push location to Supabase while online.
   useDriverLocationPublisher({ driverId: profile.id, enabled: online });
 
-  // Subscribe to incoming requests in this tier (or any tier if no vehicle).
+  // Subscribe to incoming requests in this tier.
   useEffect(() => {
     if (!online) {
       setIncoming([]);
@@ -54,7 +66,9 @@ export function DriverHome({
       .eq("status", "requested")
       .order("requested_at", { ascending: true })
       .then(({ data }) =>
-        setIncoming(((data ?? []) as Ride[]).filter((r) => !tierId || r.tier_id === tierId)),
+        setIncoming(
+          ((data ?? []) as Ride[]).filter((r) => !tierId || r.tier_id === tierId),
+        ),
       );
 
     const channel = supabase
@@ -96,7 +110,6 @@ export function DriverHome({
     try {
       const supabase = createBrowserSupabaseClient();
       const next = online ? "offline" : "online";
-      // Upsert ensures the driver row exists even on first sign-in.
       await supabase.from("drivers").upsert(
         {
           profile_id: profile.id,
@@ -129,123 +142,247 @@ export function DriverHome({
     setIncoming((prev) => prev.filter((r) => r.id !== rideId));
   }
 
-  const tierById = useMemo(() => new Map(tiers.map((t) => [t.id, t])), [tiers]);
+  const tierById = useMemo(
+    () => new Map(tiers.map((t) => [t.id, t])),
+    [tiers],
+  );
+
+  const carLabel = vehicle
+    ? `${vehicle.color ? `${vehicle.color} ` : ""}${vehicle.make} ${vehicle.model}`
+    : "Vehicle pending";
 
   return (
-    <div className="flex min-h-screen flex-col gap-5 px-5 py-6">
-      <header className="flex items-center justify-between">
-        <IconButton aria-label="Menu">
-          <MenuIcon className="h-5 w-5" />
-        </IconButton>
-        <div className="flex items-center gap-3">
-          <IconButton aria-label="Notifications">
-            <BellIcon className="h-5 w-5" />
-          </IconButton>
-          <Link href="/driver/profile">
-            <Avatar name={profile.full_name} src={profile.avatar_url} size={44} />
-          </Link>
-        </div>
-      </header>
+    <div className="relative min-h-screen overflow-x-hidden bg-background">
+      {/* Faint map texture behind everything */}
+      <div
+        aria-hidden
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(18, 20, 20, 0.8), rgba(18, 20, 20, 0.95))",
+        }}
+      />
+      <div
+        aria-hidden
+        className="fixed inset-0 z-0 opacity-30 pointer-events-none [background-image:radial-gradient(rgba(57,255,20,0.15)_1px,transparent_1px)] [background-size:40px_40px]"
+      />
 
-      <Card className="flex items-center gap-4">
-        <div className="flex flex-1 flex-col">
-          <span className="text-xs uppercase tracking-wide text-muted">
-            {online ? "You are online" : "You are offline"}
-          </span>
-          <span className="mt-1 text-lg font-semibold">
-            {profile.full_name || "Driver"}
-          </span>
-          <RatingStars value={profile.rating} showValue className="mt-1" />
-          {vehicle && (
-            <span className="mt-2 text-xs text-muted">
-              {vehicle.make} {vehicle.model} · {vehicle.plate_number}
-            </span>
-          )}
-        </div>
-        <button
-          onClick={toggleOnline}
-          disabled={busy}
-          className={`grid h-20 w-20 place-items-center rounded-full font-semibold transition-colors ${
-            online
-              ? "bg-accent text-background"
-              : "bg-surface-2 text-white ring-1 ring-white/10"
-          }`}
-        >
-          <SteeringWheelIcon className="h-6 w-6" />
-          <span className="text-[10px] uppercase tracking-wide">
-            {online ? "Online" : "Go online"}
-          </span>
-        </button>
-      </Card>
-
-      {activeRideId && (
-        <Link href={`/driver/ride/${activeRideId}`}>
-          <Card className="flex items-center justify-between bg-accent/10 ring-accent/40 hover:bg-accent/15">
-            <span className="text-sm font-semibold text-accent">
-              Resume active trip
-            </span>
-            <span className="text-xs text-accent">Open →</span>
-          </Card>
-        </Link>
-      )}
-
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">
-          {online
-            ? incoming.length === 0
-              ? "Waiting for ride requests..."
-              : "Incoming requests"
-            : "Go online to receive requests"}
-        </h2>
-        {incoming.map((ride) => {
-          const tier = tierById.get(ride.tier_id);
-          return (
-            <Card key={ride.id} className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold">
-                    {tier?.name ?? "Trip"}
+      <MobileShell
+        navItems={DRIVER_NAV}
+        profileHref="/driver/profile"
+        avatarName={profile.full_name ?? "Driver"}
+        avatarSrc={profile.avatar_url}
+      >
+        <div className="flex flex-col gap-lg mt-sm">
+          {/* Status Card */}
+          <section className="glass-panel rounded-lg p-lg flex flex-col gap-lg">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="font-headline-md text-headline-md text-primary">
+                  {profile.full_name || "Driver"}
+                </h2>
+                <div className="flex items-center gap-xs mt-xs">
+                  <MaterialIcon
+                    name="star"
+                    filled
+                    className="text-primary-container text-sm"
+                  />
+                  <span className="font-label-md text-label-md text-on-surface">
+                    {(profile.rating ?? 5).toFixed(2)}
                   </span>
-                  <span className="text-xs text-muted">
-                    {formatDistance(ride.quoted_distance_km)} ·{" "}
-                    {formatDuration(ride.quoted_duration_min)}
+                  <span className="mx-xs text-outline-variant">•</span>
+                  <span className="font-label-md text-label-md text-on-surface-variant">
+                    {carLabel}
                   </span>
                 </div>
-                <span className="text-base font-semibold">
-                  {formatMoney(ride.fare_minor, ride.currency)}
-                </span>
               </div>
-              <div className="flex flex-col gap-1 text-xs">
-                <span className="line-clamp-1">
-                  <span className="text-muted">Pickup</span> · {ride.pickup_address || "—"}
-                </span>
-                <span className="line-clamp-1">
-                  <span className="text-muted">Drop</span> · {ride.drop_address || "—"}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  fullWidth
-                  onClick={() => decline(ride.id)}
-                >
-                  Decline
-                </Button>
-                <Button fullWidth onClick={() => accept(ride.id)}>
-                  Accept
-                </Button>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              <TierBadge tier={vehicle ? tierById.get(vehicle.tier_id) : undefined} />
+            </div>
 
-      <Link href="/driver/earnings" className="mt-auto">
-        <Card className="flex items-center justify-between hover:bg-surface-2">
-          <span className="text-sm font-semibold">Earnings</span>
-          <span className="text-xs text-muted">View →</span>
-        </Card>
-      </Link>
+            {/* Massive GO ONLINE / ONLINE button */}
+            <div className="flex flex-col items-center justify-center py-xl">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={toggleOnline}
+                className={cn(
+                  "w-48 h-48 rounded-full flex flex-col items-center justify-center gap-xs transition-all duration-300 active:scale-95 disabled:opacity-60",
+                  online
+                    ? "bg-primary-container text-on-primary-container neon-glow-intense"
+                    : "bg-surface-container-highest text-on-surface border border-outline-variant/30",
+                )}
+              >
+                <MaterialIcon
+                  name="power_settings_new"
+                  filled
+                  className="text-5xl font-black"
+                />
+                <span className="font-display-lg text-headline-lg-mobile uppercase tracking-tighter">
+                  {online ? "Online" : "Go Online"}
+                </span>
+              </button>
+              <p
+                className={cn(
+                  "mt-lg font-label-md text-label-md text-on-surface-variant",
+                  online && "animate-pulse",
+                )}
+              >
+                {online
+                  ? incoming.length === 0
+                    ? "Waiting for ride requests…"
+                    : `${incoming.length} request${incoming.length === 1 ? "" : "s"} nearby`
+                  : "Tap to start receiving requests"}
+              </p>
+            </div>
+          </section>
+
+          {/* Active Trip Banner */}
+          {activeRideId && (
+            <Link href={`/driver/ride/${activeRideId}`}>
+              <div className="glass-panel rounded-lg p-md border-l-4 border-primary-container flex items-center justify-between">
+                <div className="flex items-center gap-md">
+                  <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center">
+                    <MaterialIcon
+                      name="route"
+                      className="text-primary-container"
+                    />
+                  </div>
+                  <div>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant">
+                      ACTIVE TRIP
+                    </p>
+                    <p className="font-body-md text-body-md font-semibold">
+                      Resume your current trip
+                    </p>
+                  </div>
+                </div>
+                <MaterialIcon
+                  name="chevron_right"
+                  className="text-primary-container"
+                />
+              </div>
+            </Link>
+          )}
+
+          {/* Incoming Requests Header */}
+          <div className="flex items-center justify-between mt-sm">
+            <h3 className="font-headline-md text-headline-md text-primary">
+              Live Requests
+            </h3>
+            <span className="font-label-sm text-label-sm bg-surface-container-high px-sm py-xs rounded text-on-surface-variant">
+              {incoming.length} NEARBY
+            </span>
+          </div>
+
+          {/* Request List */}
+          <div className="flex flex-col gap-md">
+            {!online && (
+              <div className="glass-panel rounded-lg p-lg text-center">
+                <p className="font-label-md text-label-md text-on-surface-variant">
+                  Go online to receive ride requests.
+                </p>
+              </div>
+            )}
+            {online && incoming.length === 0 && (
+              <div className="glass-panel rounded-lg p-lg text-center">
+                <p className="font-label-md text-label-md text-on-surface-variant">
+                  No requests yet — sit tight, we&rsquo;re scanning the city.
+                </p>
+              </div>
+            )}
+            {incoming.map((ride) => {
+              const tier = tierById.get(ride.tier_id);
+              return (
+                <div
+                  key={ride.id}
+                  className="glass-panel rounded-lg p-md flex flex-col gap-md"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-sm">
+                      <MaterialIcon
+                        name="electric_car"
+                        filled
+                        className="text-primary-container"
+                      />
+                      <span className="font-label-md text-label-md font-bold uppercase tracking-wider text-primary">
+                        {tier?.name ?? "Trip"}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-headline-md text-headline-md text-primary-container">
+                        {formatMoney(ride.fare_minor, ride.currency)}
+                      </p>
+                      <p className="font-label-sm text-label-sm text-on-surface-variant">
+                        Est. {formatDuration(ride.quoted_duration_min)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="relative pl-lg py-sm flex flex-col gap-lg">
+                    <div className="absolute left-0 top-3 bottom-3 w-[2px] border-l-2 border-dotted border-outline-variant" />
+                    <div className="relative">
+                      <div className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-surface-variant border border-outline" />
+                      <p className="font-label-sm text-label-sm text-on-surface-variant">
+                        PICKUP
+                      </p>
+                      <p className="font-body-md text-body-md line-clamp-1">
+                        {formatDistance(ride.quoted_distance_km)} away ·{" "}
+                        {ride.pickup_address || "Pickup"}
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-primary-container neon-glow-primary" />
+                      <p className="font-label-sm text-label-sm text-on-surface-variant">
+                        DESTINATION
+                      </p>
+                      <p className="font-body-md text-body-md line-clamp-1">
+                        {ride.drop_address || "Destination"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-md mt-sm">
+                    <button
+                      type="button"
+                      onClick={() => decline(ride.id)}
+                      className="flex-1 py-md rounded-full bg-surface-container-highest text-on-surface font-headline-md text-label-md active:scale-95 transition-transform"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => accept(ride.id)}
+                      className="flex-[2] w-full py-md rounded-full bg-primary-container text-on-primary-container font-headline-md text-label-md font-bold neon-glow-primary active:scale-95 transition-transform"
+                    >
+                      Accept
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer Earnings Link */}
+          <Link
+            href="/driver/earnings"
+            className="mt-xl flex items-center justify-center gap-sm p-lg rounded-xl bg-surface-container-low border border-white/5 text-primary-container font-label-md text-label-md hover:bg-surface-container-high transition-colors"
+          >
+            <MaterialIcon name="payments" />
+            View Daily Earnings
+            <MaterialIcon name="arrow_forward" />
+          </Link>
+        </div>
+      </MobileShell>
     </div>
+  );
+}
+
+/** Right-aligned "SILVER TIER" pill in the status card. */
+function TierBadge({ tier }: { tier: RideTier | undefined }) {
+  if (!tier) return null;
+  return (
+    <span className="px-sm py-xs bg-primary-container/10 text-primary-container rounded-full font-label-sm text-label-sm border border-primary-container/20 uppercase tracking-wider">
+      {tier.name} tier
+    </span>
   );
 }
