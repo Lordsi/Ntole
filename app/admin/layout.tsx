@@ -11,12 +11,18 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const { profile } = await requireRole("admin");
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md">
-      <AdminSidebar />
+      <AdminSidebar
+        adminName={profile?.full_name}
+        adminAvatarUrl={profile?.avatar_url}
+      />
 
-      <main className="ml-64 p-lg pb-xl min-h-screen">
-        {/* Right-aligned utility chrome — notifications + admin profile pill.
-            Per-page titles render below as part of `children`. */}
-        <header className="flex justify-end items-center gap-md mb-lg">
+      {/* Main content: full-width on mobile (sidebar is a drawer), shifted
+          right by the persistent sidebar on md+. Top padding on mobile leaves
+          room for the fixed mobile top app bar (h-14). */}
+      <main className="md:ml-64 px-md md:px-lg pt-[4.5rem] md:pt-lg pb-xl min-h-screen">
+        {/* Desktop-only utility chrome — notifications + admin profile pill.
+            On mobile these live in the top app bar inside <AdminSidebar />. */}
+        <header className="hidden md:flex justify-end items-center gap-md mb-lg">
           <button
             type="button"
             aria-label="Notifications"

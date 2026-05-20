@@ -51,7 +51,8 @@ export default async function AdminDriversPage() {
       />
 
       <div className="glass-panel rounded-lg overflow-hidden">
-        <table className="w-full font-body-md text-body-md">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px] font-body-md text-body-md">
           <thead>
             <tr className="bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm uppercase tracking-[0.12em]">
               <th className="px-md py-sm text-left">Driver</th>
@@ -118,6 +119,7 @@ export default async function AdminDriversPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );
