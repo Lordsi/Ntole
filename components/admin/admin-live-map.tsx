@@ -85,13 +85,6 @@ export function AdminLiveMap() {
     };
   }, []);
 
-  // Render only the first driver as the centerpiece; remaining drivers are
-  // overlaid via separate driver dots in a future iteration.
-  const first = drivers[0] ?? null;
-  return (
-    <RideMap
-      driver={first ? { lat: first.lat, lng: first.lng } : null}
-      className="h-full w-full"
-    />
-  );
+  const fleet = drivers.map((d) => ({ lat: d.lat, lng: d.lng }));
+  return <RideMap drivers={fleet} className="h-full w-full" zoom={11} />;
 }
