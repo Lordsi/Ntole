@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { MaterialIcon } from "@/components/ui/material-icon";
@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils/cn";
 type Mode = "signin" | "signup";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
   const initialErrorFromUrl = searchParams.get("error");
@@ -20,11 +19,26 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(initialErrorFromUrl);
+  const [confirmEmailSentTo, setConfirmEmailSentTo] = useState<string | null>(
+    null,
+  );
   const [pending, startTransition] = useTransition();
+
+  // After a successful sign-in we want the new session cookie to flow
+  // through every server component on the destination page, with no
+  // double-fetch. Doing a full-page navigation (instead of router.replace
+  // + router.refresh) is both simpler and noticeably snappier — the
+  // browser shows the navigation immediately and the server renders the
+  // next page with the cookie already in place.
+  function navigateToDestination() {
+    if (typeof window === "undefined") return;
+    window.location.assign(next);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setConfirmEmailSentTo(null);
     startTransition(async () => {
       const supabase = createBrowserSupabaseClient();
 
@@ -37,8 +51,7 @@ export function LoginForm() {
           setError(error.message);
           return;
         }
-        router.replace(next);
-        router.refresh();
+        navigateToDestination();
         return;
       }
 
@@ -55,28 +68,17 @@ export function LoginForm() {
         return;
       }
 
+      // If Supabase returned a session, we're done — email confirmation is
+      // disabled in this project. Navigate straight to the destination.
       if (data.session) {
-        router.replace(next);
-        router.refresh();
+        navigateToDestination();
         return;
       }
 
-      // No confirmation email — sign in immediately after account creation.
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
-        password,
-      });
-      if (signInError) {
-        setError(
-          signInError.message.includes("Email not confirmed")
-            ? "Account created. Disable “Confirm email” in Supabase Auth settings, or sign in with the password you just set."
-            : signInError.message,
-        );
-        return;
-      }
-
-      router.replace(next);
-      router.refresh();
+      // Otherwise a confirmation email is on its way. Tell the user to
+      // check their inbox — we don't try to brute-force sign-in here
+      // because it would silently fail with "Email not confirmed".
+      setConfirmEmailSentTo(trimmedEmail);
     });
   }
 
@@ -150,11 +152,35 @@ export function LoginForm() {
           {error}
         </p>
       )}
+
+      {confirmEmailSentTo && (
+        <div
+          className="glass-panel rounded-md p-md flex items-start gap-md"
+          role="status"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-container/15 text-primary-container">
+            <MaterialIcon name="mark_email_unread" filled />
+          </span>
+          <div className="flex flex-1 flex-col gap-xs">
+            <p className="font-body-md text-body-md font-semibold text-on-surface">
+              Check your inbox
+            </p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant">
+              We sent a confirmation link to{" "}
+              <span className="text-on-surface">{confirmEmailSentTo}</span>.
+              Open it to finish creating your account, then come back and sign
+              in.
+            </p>
+          </div>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={() => {
           setMode(isSignup ? "signin" : "signup");
           setError(null);
+          setConfirmEmailSentTo(null);
         }}
         className="mt-xs text-center font-body-sm text-body-sm text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 rounded-full py-xs"
       >
