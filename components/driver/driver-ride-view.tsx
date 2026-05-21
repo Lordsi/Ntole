@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { RideMap } from "@/components/map";
+import { CancelRideDialog } from "@/components/driver/cancel-ride-dialog";
 import { useRide } from "@/lib/realtime/use-ride";
 import { useDriverLocationPublisher } from "@/lib/realtime/use-driver-location";
 import { cn } from "@/lib/utils/cn";
@@ -118,14 +119,25 @@ export function DriverRideView({
     if (action === "complete") router.push("/driver/earnings");
   }
 
-  async function cancel() {
-    await fetch(`/api/rides/${ride.id}`, {
+  const [cancelOpen, setCancelOpen] = useState(false);
+
+  async function cancel(reason: string) {
+    const res = await fetch(`/api/rides/${ride.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "cancel" }),
+      body: JSON.stringify({ action: "cancel", reason }),
     });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? "Couldn't cancel the ride.");
+    }
+    setCancelOpen(false);
     router.push("/driver");
   }
+
+  const canCancel = ride.status !== "completed" && ride.status !== "cancelled";
+  const cancelStage =
+    ride.status === "in_progress" ? "in_progress" : "before_pickup";
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -145,18 +157,36 @@ export function DriverRideView({
         className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/85 via-background/40 to-transparent"
       />
 
-      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-margin-mobile py-md">
+      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-sm px-margin-mobile py-md">
         <Link
           href="/driver"
-          aria-label="Back to dashboard"
-          className="grid h-11 w-11 place-items-center rounded-full bg-surface/80 backdrop-blur-md text-on-surface-variant hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2"
+          aria-label="Exit map and return to dashboard"
+          title="Exit to dashboard"
+          className="inline-flex h-11 items-center gap-xs rounded-full bg-surface/80 backdrop-blur-md px-md text-on-surface-variant hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 ring-1 ring-white/10 transition-colors"
         >
-          <MaterialIcon name="arrow_back" />
+          <MaterialIcon name="close" className="text-[20px]" />
+          <span className="font-label-sm text-label-sm font-bold uppercase tracking-[0.08em]">
+            Exit
+          </span>
         </Link>
         <span className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-md text-label-sm font-label-sm uppercase tracking-[0.12em] text-on-surface ring-1 ring-white/10">
           {statusLabel}
         </span>
-        <div className="w-11" />
+        {canCancel ? (
+          <button
+            type="button"
+            onClick={() => setCancelOpen(true)}
+            aria-label="Cancel ride"
+            className="inline-flex h-11 items-center gap-xs rounded-full bg-error/15 backdrop-blur-md px-md text-error hover:bg-error/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-error focus-visible:outline-offset-2 ring-1 ring-error/40 transition-colors"
+          >
+            <MaterialIcon name="report" filled className="text-[20px]" />
+            <span className="font-label-sm text-label-sm font-bold uppercase tracking-[0.08em]">
+              Cancel
+            </span>
+          </button>
+        ) : (
+          <div className="w-11" />
+        )}
       </header>
 
       {/* Bottom panel container */}
@@ -257,17 +287,25 @@ export function DriverRideView({
               {next.label}
             </button>
           )}
-          {ride.status !== "completed" && ride.status !== "cancelled" && (
+          {canCancel && (
             <button
               type="button"
-              onClick={cancel}
-              className="w-full py-sm rounded-full bg-surface-container-highest text-on-surface-variant font-label-md text-label-md font-semibold transition-colors hover:text-error hover:bg-error/10"
+              onClick={() => setCancelOpen(true)}
+              className="w-full py-sm rounded-full border border-error/30 bg-error/[0.04] text-error font-label-md text-label-md font-bold uppercase tracking-[0.08em] hover:bg-error/10 transition-colors inline-flex items-center justify-center gap-sm"
             >
-              Cancel ride
+              <MaterialIcon name="report" className="text-[18px]" />
+              {ride.status === "in_progress" ? "End trip early" : "Cancel ride"}
             </button>
           )}
         </section>
       </div>
+
+      <CancelRideDialog
+        open={cancelOpen}
+        stage={cancelStage}
+        onClose={() => setCancelOpen(false)}
+        onConfirm={cancel}
+      />
     </div>
   );
 }

@@ -92,6 +92,14 @@ export async function PATCH(
     patch.cancelled_at = now;
     patch.cancelled_by = user.id;
     if (reason) patch.cancellation_reason = reason;
+    // Free the driver up so they can accept new requests. Without this
+    // a driver who cancels mid-trip stays stuck in `on_trip` and won't
+    // see incoming ride requests until they manually toggle offline /
+    // online.
+    await supabase
+      .from("drivers")
+      .update({ status: "online" })
+      .eq("profile_id", user.id);
   }
   if (action === "complete") {
     patch.completed_at = now;
