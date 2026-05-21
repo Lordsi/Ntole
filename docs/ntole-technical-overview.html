@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Ntole — Technical Overview</title>
+<style>
+  :root {
+    --ink: #0c0f0f;
+    --ink-soft: #3a3f3a;
+    --ink-muted: #6c736c;
+    --accent: #107100;
+    --accent-soft: #e7fbe2;
+    --rule: #d8ddd6;
+    --code-bg: #f1f4f0;
+    --warn: #8a4a00;
+    --warn-soft: #fff3e0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    color: var(--ink);
+    font-family: "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  @page { size: A4; margin: 18mm 16mm; }
+  @page :first { margin: 0; }
+  h1, h2, h3, h4 { color: var(--ink); margin: 1.6em 0 0.4em; line-height: 1.2; }
+  h1 { font-size: 22pt; letter-spacing: -0.01em; font-weight: 800; }
+  h2 { font-size: 16pt; letter-spacing: -0.005em; font-weight: 700; border-bottom: 1px solid var(--rule); padding-bottom: 0.25em; }
+  h3 { font-size: 13pt; font-weight: 700; margin-top: 1.4em; }
+  h4 { font-size: 11pt; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 1.2em; }
+  p { margin: 0.4em 0 0.8em; }
+  ul, ol { margin: 0.3em 0 0.8em; padding-left: 1.4em; }
+  li { margin: 0.18em 0; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em; background: var(--code-bg); padding: 10px 12px; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* Cover page */
+  .cover {
+    page-break-after: always;
+    height: 297mm; width: 210mm;
+    padding: 30mm 22mm;
+    background: linear-gradient(160deg, #0c0f0f 0%, #1a1c1c 55%, #053900 100%);
+    color: #efffe3;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative;
+  }
+  .cover .wordmark { font-weight: 900; font-size: 56pt; letter-spacing: -0.025em; color: #39ff14; }
+  .cover .tagline { font-size: 13pt; color: #d6e4cf; max-width: 320pt; margin-top: 10pt; }
+  .cover .meta { font-size: 10pt; color: #9aae93; letter-spacing: 0.08em; text-transform: uppercase; }
+  .cover .meta b { display: block; font-size: 11pt; color: #efffe3; letter-spacing: -0.005em; text-transform: none; margin-top: 2pt; font-weight: 600; }
+  .cover .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18pt 36pt; }
+
+  /* Helpers */
+  .kv { display: grid; grid-template-columns: 30% 70%; row-gap: 4pt; column-gap: 12pt; }
+  .kv dt { font-weight: 600; color: var(--ink-soft); }
+  .kv dd { margin: 0; }
+
+  .card {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 10pt 14pt;
+    margin: 8pt 0 12pt;
+    break-inside: avoid;
+  }
+  .card.accent { border-color: var(--accent); background: var(--accent-soft); }
+  .card.warn { border-color: #d6b894; background: var(--warn-soft); }
+  .card .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4pt; }
+  .card h3 { margin: 0; font-size: 12pt; }
+  .card .path { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 9.5pt; color: var(--ink-muted); }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Page table */
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 10pt; }
+  th, td { text-align: left; padding: 6pt 8pt; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: #f6f8f4; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.02em; }
+  tr { break-inside: avoid; }
+
+  .pill {
+    display: inline-block; font-size: 8.5pt; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 1pt 7pt; border-radius: 999px; font-weight: 700;
+  }
+  .pill.get { background: #e6f0ff; color: #1d3a8a; }
+  .pill.post { background: #e7fbe2; color: #107100; }
+  .pill.patch { background: #fff3e0; color: #8a4a00; }
+  .pill.del { background: #ffe1de; color: #93000a; }
+  .pill.role { background: var(--code-bg); color: var(--ink); }
+  .pill.public { background: #e6f0ff; color: #1d3a8a; }
+
+  /* Section break helpers */
+  .page-break { page-break-before: always; }
+  section { break-inside: auto; }
+  h2 { page-break-after: avoid; }
+  h3 { page-break-after: avoid; }
+  .card, table, pre { page-break-inside: avoid; }
+
+  .toc { columns: 2; column-gap: 24pt; font-size: 10.5pt; }
+  .toc h3 { margin: 0 0 4pt; column-span: all; }
+  .toc ol { padding-left: 1.2em; margin: 0; }
+  .toc li { margin: 2pt 0; }
+  .toc a { color: var(--ink-soft); }
+
+  .footnote { font-size: 9pt; color: var(--ink-muted); margin-top: 4pt; }
+</style>
+</head>
+<body>
+
+<!-- ====================== COVER PAGE ====================== -->
+<div class="cover">
+  <div>
+    <div class="meta">Technical Overview · v1.0</div>
+    <div class="wordmark">Ntole</div>
+    <div class="tagline">Ride-hailing platform for Malawi. One Next.js application serving riders, drivers, and platform operators from a shared Supabase backend.</div>
+  </div>
+  <div class="grid">
+    <div class="meta">Audience<b>Engineering team</b></div>
+    <div class="meta">Generated<b>21 May 2026</b></div>
+    <div class="meta">Codebase<b>Lordsi/Ntole · main</b></div>
+    <div class="meta">Surfaces<b>Rider · Driver · Admin</b></div>
+  </div>
+</div>
+
+<!-- ====================== TOC ====================== -->
+<section>
+  <h2 id="toc">Table of contents</h2>
+  <div class="toc">
+    <ol>
+      <li><a href="#about">What Ntole is</a></li>
+      <li><a href="#stack">Technology stack</a></li>
+      <li><a href="#layout">Repository layout</a></li>
+      <li><a href="#auth">Authentication &amp; access control</a></li>
+      <li><a href="#db">Database schema</a></li>
+      <li><a href="#shared">Shared &amp; public pages</a></li>
+      <li><a href="#rider">Rider surface</a></li>
+      <li><a href="#driver">Driver surface</a></li>
+      <li><a href="#admin">Admin surface</a></li>
+      <li><a href="#api">Backend API endpoints</a></li>
+      <li><a href="#libs">Shared libraries (<code>lib/</code>)</a></li>
+      <li><a href="#realtime">Realtime, maps &amp; geolocation</a></li>
+      <li><a href="#payments">Payments</a></li>
+      <li><a href="#env">Environment configuration</a></li>
+      <li><a href="#dev">Development &amp; deployment workflow</a></li>
+      <li><a href="#glossary">Glossary</a></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ====================== ABOUT ====================== -->
+<section>
+  <h2 id="about">1 · What Ntole is</h2>
+  <p>
+    Ntole is a ride-hailing progressive web app targeted at Malawi. A single
+    Next.js&nbsp;15 application ships three role-scoped surfaces from one
+    codebase, all sharing a Supabase backend:
+  </p>
+  <ul>
+    <li><b>Rider</b> — the public-facing hailing experience: enter pickup and destination, see real-time fare quotes per ride tier, request a ride, track the assigned driver on a live map, and pay.</li>
+    <li><b>Driver</b> — onboarding/compliance wizard, online/offline toggle, incoming ride requests, in-trip state machine (arrive → start → end), and earnings.</li>
+    <li><b>Admin</b> — operational console: users, drivers (including review of submitted applications), rides, dynamic pricing tiers, and a fleet live-map.</li>
+  </ul>
+
+  <p>The fare model is the standard Uber-style equation, applied per tier:</p>
+  <pre>fare = max(min_fare, (base + per_km × distance + per_min × duration) × surge)</pre>
+  <p>Tiers, rates, and surge multipliers are stored in <code>ride_tiers</code> and are admin-editable.</p>
+</section>
+
+<!-- ====================== STACK ====================== -->
+<section>
+  <h2 id="stack">2 · Technology stack</h2>
+  <dl class="kv">
+    <dt>Framework</dt><dd>Next.js&nbsp;15 (App Router) + React&nbsp;19, written in TypeScript.</dd>
+    <dt>Styling</dt><dd>Tailwind&nbsp;CSS with a Material-3-inspired token system (custom <code>tailwind.config.ts</code>). Light + dark themes via a <code>ThemeProvider</code>.</dd>
+    <dt>Typography</dt><dd>Plus Jakarta Sans (single sans family across display, body, and labels).</dd>
+    <dt>Backend</dt><dd>Supabase — Postgres for data, GoTrue for auth, Realtime for live channels, Storage for driver document and avatar uploads.</dd>
+    <dt>Authorization</dt><dd>Row-Level Security policies enforce that riders only see their own rides, drivers only see their own driver record, etc. Admins have a <code>SECURITY DEFINER</code> escape hatch via <code>is_admin()</code>.</dd>
+    <dt>Maps</dt><dd><code>react-leaflet</code> + CartoDB tiles (dark and Voyager light); OSRM (<code>lib/maps/osrm.ts</code>) for route + ETA; Nominatim (<code>lib/maps/nominatim.ts</code>) for forward + reverse geocoding via internal proxy routes.</dd>
+    <dt>Payments</dt><dd>Provider-abstracted: <code>PaymentProvider</code> interface with Stripe and a mock implementation selected by <code>PAYMENT_PROVIDER</code>.</dd>
+    <dt>PWA</dt><dd>Service worker registration + install prompt for "Add to home screen". Manifest in <code>public/manifest.webmanifest</code>.</dd>
+    <dt>Hosting</dt><dd>Render.com (auto-deploys from the <code>main</code> branch).</dd>
+    <dt>Testing</dt><dd>Vitest (currently exercising the pricing engine — see <code>lib/pricing/fare.test.ts</code>).</dd>
+  </dl>
+</section>
+
+<!-- ====================== LAYOUT ====================== -->
+<section>
+  <h2 id="layout">3 · Repository layout</h2>
+<pre>app/                Next.js routes (App Router)
+  page.tsx          Smart entry — redirects by role
+  layout.tsx        Global &lt;html&gt;, fonts, ThemeProvider, PWA bootstrap
+  globals.css       Tailwind layer + design-system tokens
+  (auth)/login/     Sign in / sign up
+  auth/callback/    Email-link / OAuth code exchange
+  rider/            Rider surface
+  driver/           Driver surface
+  admin/            Admin surface
+  api/              Server route handlers
+
+components/         React components, grouped by surface
+  rider/  driver/  admin/  shared/  ui/  map/  chat/
+
+lib/                Server &amp; client utilities, no JSX
+  auth/             Routing helpers + session guards
+  supabase/         Browser, server, middleware clients + types
+  maps/             OSRM, Nominatim, geolocation hook
+  pricing/          Fare engine (+ unit tests)
+  payments/         PaymentProvider interface + Stripe / mock
+  realtime/         Channel helpers (driver location, ride updates)
+  notifications/    Builders for the notifications sheet
+  admin/            Moderation helpers + signed storage URLs
+  driver/           Driver application schema
+
+supabase/
+  migrations/       0001_init.sql, 0002_profile_extensions.sql, 0003_driver_compliance.sql
+  seed.sql          Demo data (tiers + seeded users)
+
+middleware.ts       Auth gate + role guard
+public/             PWA icons, manifest, static assets</pre>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ====================== AUTH ====================== -->
+<section>
+  <h2 id="auth">4 · Authentication &amp; access control</h2>
+
+  <h3>Sign-in flow</h3>
+  <ul>
+    <li>Email + password via Supabase Auth (<code>signInWithPassword</code> / <code>signUp</code>).</li>
+    <li>Confirmation emails (when enabled in Supabase) come back through <code>app/auth/callback/route.ts</code>, which exchanges the code for a session cookie.</li>
+    <li>Three seeded accounts ship in <code>supabase/seed.sql</code> for QA (rider, driver, admin).</li>
+  </ul>
+
+  <h3>Middleware</h3>
+  <p><code>middleware.ts</code> runs on every request and:</p>
+  <ol>
+    <li>Refreshes the Supabase session cookie (<code>updateSession</code>).</li>
+    <li>Lets public paths through: <code>/</code>, <code>/login</code>, <code>/rider</code>, and anything under <code>/auth/</code>.</li>
+    <li>Otherwise requires a session — redirects to <code>/login?next=…</code> if absent.</li>
+    <li>Reads the user's role from <code>profiles</code> and gates top-level segments via <code>canAccess()</code> in <code>lib/auth/routing.ts</code>.</li>
+    <li>Forces unapproved drivers through <code>/driver/apply</code> before they can reach the rest of the driver surface.</li>
+  </ol>
+
+  <h3>Server components</h3>
+  <p>Protected server components call <code>requireRole(...roles)</code> (in <code>lib/auth/session.ts</code>) which redirects mismatched users to their own home.</p>
+
+  <h3>Row Level Security</h3>
+  <p>Every table has RLS enabled. Representative policies:</p>
+  <ul>
+    <li><code>profiles_self_read</code> — a user reads their own row; admins read all.</li>
+    <li><code>profiles_ride_partner_read</code> — riders and drivers can read each other's basic profile, only for rides they share.</li>
+    <li><code>rides_participant_read / update</code> — only the rider, the driver, or an admin.</li>
+    <li><code>messages_participant_*</code> — chat messages are visible only to the two ride participants.</li>
+    <li><code>favorite_drivers_self_*</code> — riders can favourite drivers, only manage their own list.</li>
+    <li><code>"avatars self write"</code> on <code>storage.objects</code> — users upload only into <code>avatars/&lt;uid&gt;/…</code>.</li>
+  </ul>
+  <p>Atomic ride acceptance uses a <code>SECURITY DEFINER</code> RPC (<code>accept_ride(ride)</code>) so two drivers can't both win the same request.</p>
+</section>
+
+<!-- ====================== DB ====================== -->
+<section>
+  <h2 id="db">5 · Database schema</h2>
+  <p>Three migrations under <code>supabase/migrations/</code>. All idempotent.</p>
+
+  <h3>Core tables (migration 0001)</h3>
+  <table>
+    <thead><tr><th>Table</th><th>What it stores</th></tr></thead>
+    <tbody>
+      <tr><td><code>profiles</code></td><td>One row per <code>auth.users</code> row. <code>role</code> (rider / driver / admin), <code>full_name</code>, <code>phone</code>, <code>avatar_url</code>, <code>rating</code>, <code>trip_count</code>, <code>safety_rating</code>.</td></tr>
+      <tr><td><code>ride_tiers</code></td><td>Pricing tiers (Standard, Comfort, Lux, etc.). Base fare, per-km, per-minute, min fare, currency, surge multiplier, seat count, ordering, active flag.</td></tr>
+      <tr><td><code>vehicles</code></td><td>Driver-owned vehicles. Make, model, plate, color, seats, tier.</td></tr>
+      <tr><td><code>drivers</code></td><td>Driver-specific data. Linked vehicle, status (offline / online / on_trip), current GPS coords, last-seen timestamp, license number, verification flag.</td></tr>
+      <tr><td><code>rides</code></td><td>The lifecycle of a ride. Foreign keys to rider / driver / vehicle / tier. Status enum, pickup &amp; drop coords + address, quoted vs actual distance &amp; duration, fare, currency, surge multiplier, and a full set of timestamps (requested, accepted, arrived, started, completed, cancelled).</td></tr>
+      <tr><td><code>messages</code></td><td>In-ride chat between rider and driver.</td></tr>
+      <tr><td><code>payments</code></td><td>One row per payment intent. Provider, provider intent id, amount, status (pending / authorized / paid / failed / refunded).</td></tr>
+      <tr><td><code>ratings</code></td><td>One-per-ride-per-rater 1–5 star rating + optional comment. A trigger recomputes the recipient's <code>profiles.rating</code> average.</td></tr>
+      <tr><td><code>app_config</code></td><td>Single-row global settings (default currency, match radius, ping interval, surge).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Profile extensions (migration 0002)</h3>
+  <ul>
+    <li><code>profiles.home_lat / home_lng / home_address</code> — saved "Home" pickup pin used by the rider quick-chip rail.</li>
+    <li><code>favorite_drivers (rider_id, driver_id)</code> — riders can star drivers they've ridden with.</li>
+    <li><code>storage.buckets.avatars</code> — public read, write only into <code>&lt;uid&gt;/…</code>. Powers self-served profile picture uploads.</li>
+  </ul>
+
+  <h3>Driver compliance (migration 0003)</h3>
+  <p>Adds onboarding, moderation, and complaint primitives:</p>
+  <ul>
+    <li><code>drivers</code> gains <code>approval_status</code> (draft → submitted → approved / rejected / banned), normalized national ID + license fields, document paths in Storage, requested vs admin-assigned tier, rating overrides, warning count, ban metadata.</li>
+    <li><code>banned_identifiers</code> — reuse-resistant ban registry keyed by national ID + license.</li>
+    <li><code>complaints</code> — rider/driver complaints with category and status.</li>
+    <li><code>driver_moderation_log</code> — audit trail of every approve / reject / warn / ban / unban / tier change / rating override / verify action.</li>
+  </ul>
+
+  <h3>Key Postgres helpers</h3>
+  <ul>
+    <li><code>haversine_km(...)</code> — great-circle distance in km.</li>
+    <li><code>find_nearby_drivers(origin_lat, origin_lng, tier, radius, limit)</code> — returns the N closest online drivers in a tier within a radius.</li>
+    <li><code>accept_ride(ride)</code> — atomic claim used by <code>PATCH /api/rides/[id]</code>.</li>
+    <li><code>is_admin()</code> — predicate used by every admin-gated RLS policy.</li>
+    <li>Triggers: <code>touch_updated_at</code> on all mutable tables, <code>handle_new_user</code> seeds a profile when a Supabase auth user is inserted, <code>recompute_rating</code> updates running averages, <code>increment_trip_counts</code> on completion.</li>
+  </ul>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ====================== PAGES: SHARED ====================== -->
+<section>
+  <h2 id="shared">6 · Shared &amp; public pages</h2>
+
+  <div class="card">
+    <div class="head"><h3><code>/</code> · Smart entry</h3><span class="path">app/page.tsx</span></div>
+    <p>Reads the session and redirects: anonymous → <code>/rider</code> (public preview), rider → <code>/rider</code>, driver → <code>/driver</code>, admin → <code>/admin</code>.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/login</code> · Sign in / sign up</h3><span class="path">app/(auth)/login/page.tsx</span></div>
+    <p>Toggle between <b>Sign in</b> and <b>Create account</b>. Restores any persisted pending-ride form via <code>sessionStorage</code> after success. Lists seeded demo accounts.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/auth/callback</code> · Email link handler</h3><span class="path">app/auth/callback/route.ts</span></div>
+    <p>Exchanges Supabase's <code>code</code> for a session cookie, then redirects to <code>?next=</code> or the role home.</p>
+  </div>
+</section>
+
+<!-- ====================== PAGES: RIDER ====================== -->
+<section>
+  <h2 id="rider">7 · Rider surface (<code>/rider</code>)</h2>
+  <p>The rider surface is intentionally browsable without an account so visitors can price-quote a trip. Booking, however, requires sign-in. Layout: <code>app/rider/layout.tsx</code>; sub-routes that need a session enforce their own.</p>
+
+  <div class="card">
+    <div class="head"><h3><code>/rider</code> · Hailing screen</h3><span class="path">components/rider/rider-home.tsx</span></div>
+    <ul>
+      <li>Greeting + live geolocation pill (detecting / city / off / unavailable).</li>
+      <li>Full-bleed ambient map (CartoDB Dark Matter / Voyager) that flies to the user's GPS coordinates as soon as the location permission is granted.</li>
+      <li>Quick-chip rail with the rider's saved Home and recent destinations.</li>
+      <li>Mode toggle: <b>Driver</b> / <b>Package</b>.</li>
+      <li><code>LocationStack</code>: pickup + destination autocomplete (Nominatim via <code>/api/geocode</code>).</li>
+      <li>Tier carousel rendered from <code>ride_tiers</code>; fares filled in by <code>/api/quote</code>.</li>
+      <li>Primary CTA: <i>Request Ride</i> (signed-in) or <i>Sign in to request ride</i> (guest — persists pending form and round-trips through login).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/rider/ride/[id]</code> · Active trip</h3><span class="path">components/rider/rider-ride-view.tsx</span></div>
+    <p>Single page that morphs with <code>ride.status</code>. Realtime subscription on <code>rides</code> + the driver's live location channel.</p>
+    <table>
+      <thead><tr><th>Status</th><th>Panel</th></tr></thead>
+      <tbody>
+        <tr><td><code>requested</code></td><td><code>WaitingForMatchPanel</code> — searching, with Cancel.</td></tr>
+        <tr><td><code>accepted</code></td><td><code>DriverArrivingPanel</code> — driver card, ETA, plate badge, chat link.</td></tr>
+        <tr><td><code>en_route_to_pickup</code> / <code>in_progress</code></td><td><code>StandardRidePanel</code> — full driver info, safety bar, chat.</td></tr>
+        <tr><td><code>completed</code></td><td><code>CompletedRidePanel</code> — payment intent kicked off, 1–5 star rating.</td></tr>
+        <tr><td><code>cancelled</code></td><td><code>CancelledRidePanel</code> — reason + back home.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/rider/ride/[id]/chat</code> · In-ride chat</h3><span class="path">app/rider/ride/[id]/chat/page.tsx</span></div>
+    <p>Realtime message thread keyed by ride, backed by the <code>messages</code> table. Same component is reused on the driver side.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/rider/history</code> · Activity</h3><span class="path">app/rider/history/page.tsx</span></div>
+    <p>Last 50 rides with stats card on top (trips, miles travelled, rating). Each completed-ride row has a star button to <b>favourite the driver</b>.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/rider/profile</code> · Profile</h3><span class="path">app/rider/profile/page.tsx</span></div>
+    <p>Stats card, <code>ProfileForm</code> (avatar upload, name, phone, home location, delete account), favourite-drivers list, shortcut to history, and a prominent <b>Log out</b> button.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/rider/wallet</code> &amp; <code>/rider/ride-options</code></h3><span class="path">app/rider/wallet/ · app/rider/ride-options/</span></div>
+    <p>Auxiliary pages — saved payment methods placeholder and a full grid view of available ride tiers (links from the home carousel's <i>View all</i>).</p>
+  </div>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ====================== PAGES: DRIVER ====================== -->
+<section>
+  <h2 id="driver">8 · Driver surface (<code>/driver</code>)</h2>
+  <p>Gated by <code>requireRole("driver", "admin")</code>. Middleware additionally forces unapproved drivers through the application flow before any other driver page is accessible.</p>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver/apply</code> · Application wizard</h3><span class="path">components/driver/application-wizard.tsx</span></div>
+    <p>Multi-step submission form (personal details, national ID, license, vehicle, photos). Validates against <code>lib/driver/application-schema.ts</code>. Files upload to private Storage via signed URLs from <code>/api/driver/documents/upload-url</code>. Submission flips <code>drivers.approval_status</code> to <code>submitted</code>.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver/onboarding</code> · Holding page</h3><span class="path">app/driver/onboarding/page.tsx</span></div>
+    <p>Shown after submission while an admin reviews. Polls <code>/api/driver/application/status</code>.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver</code> · Dashboard</h3><span class="path">components/driver/driver-home.tsx</span></div>
+    <ul>
+      <li>Status card with name + rating + vehicle.</li>
+      <li>Go online / Online toggle — upserts <code>drivers.status</code>, starts <code>useDriverLocationPublisher</code> (pushes GPS every <code>NEXT_PUBLIC_DRIVER_LOCATION_INTERVAL_MS</code>), and subscribes to a Realtime channel for incoming requests matching the driver's tier.</li>
+      <li>Resume-active-trip banner.</li>
+      <li>Incoming request cards with <b>Accept</b> (atomic RPC) / <b>Decline</b> (local dismiss).</li>
+      <li>Daily earnings strip.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver/ride/[id]</code> · Active trip</h3><span class="path">components/driver/driver-ride-view.tsx</span></div>
+    <p>The driver counterpart of the rider trip screen. The bottom panel exposes the state-machine button:</p>
+    <ul>
+      <li><code>accepted</code> → <i>I'm at the pickup</i> → <code>en_route_to_pickup</code>.</li>
+      <li><code>en_route_to_pickup</code> → <i>Start trip</i> → <code>in_progress</code>.</li>
+      <li><code>in_progress</code> → <i>End trip</i> → <code>completed</code>. The server recomputes the fare from actual distance &amp; duration and flips the driver back to <code>online</code>.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver/earnings</code></h3><span class="path">app/driver/earnings/page.tsx</span></div>
+    <p>Lifetime + recent-trip totals served by <code>/api/driver/earnings</code>.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver/wallet</code></h3><span class="path">app/driver/wallet/page.tsx</span></div>
+    <p>Driver-side wallet — payouts and balance placeholder.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/driver/profile</code></h3><span class="path">app/driver/profile/page.tsx</span></div>
+    <p>Stats card (trips, miles, rating, lifetime earnings), <code>ProfileForm</code>, <code>VehicleForm</code> (make, model, plate, colour, seats, requested tier), and a <b>Log out</b> button.</p>
+  </div>
+</section>
+
+<!-- ====================== PAGES: ADMIN ====================== -->
+<section>
+  <h2 id="admin">9 · Admin surface (<code>/admin</code>)</h2>
+  <p>Gated by <code>requireRole("admin")</code>. Layout (<code>app/admin/layout.tsx</code>) renders a persistent left sidebar on desktop and a slide-in drawer on mobile, plus a header with theme toggle, notifications bell, and the admin's profile pill. Every sub-route has an instant <code>loading.tsx</code> skeleton so navigation feels snappy.</p>
+
+  <div class="card">
+    <div class="head"><h3><code>/admin</code> · Overview</h3><span class="path">app/admin/page.tsx</span></div>
+    <p>KPI tiles (riders, online drivers, active rides, revenue), live fleet map of every online driver (<code>AdminLiveMap</code> over Supabase Realtime), revenue mini-chart, latest rides table, top-driver leaderboard, and quick actions.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/admin/users</code></h3><span class="path">app/admin/users/page.tsx</span></div>
+    <p>Every profile with avatar, phone, trips, rating, and a three-pill role control (Rider / Driver / Admin). Promoting a rider to <i>driver</i> also upserts a <code>drivers</code> row so the driver portal works immediately. Admins cannot change their own role from this widget.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/admin/drivers</code> &amp; <code>/admin/drivers/[id]</code></h3><span class="path">app/admin/drivers/</span></div>
+    <p>List of all drivers (status, vehicle, last-seen, approval status). The detail page shows the full application, document gallery (rendered from signed Storage URLs), and moderation actions (<i>approve / reject / warn / ban / unban / set tier / set rating / verify</i>). Every action is logged to <code>driver_moderation_log</code>.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/admin/rides</code></h3><span class="path">app/admin/rides/page.tsx</span></div>
+    <p>Last 200 rides with status-pill filters. Each row shows time, from, to, status, and fare.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/admin/pricing</code></h3><span class="path">components/admin/pricing-editor.tsx</span></div>
+    <p>Live editor for <code>ride_tiers</code>: base fare, per-km, per-minute, min fare, surge, currency, seat count, active flag. Saving here immediately changes what every rider sees on the home carousel and what <code>/api/quote</code> returns.</p>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3><code>/admin/profile</code></h3><span class="path">app/admin/profile/page.tsx</span></div>
+    <p>Stats (users, trips, miles, revenue), the same <code>ProfileForm</code> as the other surfaces, and <b>Log out</b>.</p>
+  </div>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ====================== API ====================== -->
+<section>
+  <h2 id="api">10 · Backend API endpoints (<code>/api/*</code>)</h2>
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Route</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="pill get">GET</span></td><td><code>/api/geocode</code></td><td>Forward geocoding (Nominatim proxy) for the autocomplete inputs.</td></tr>
+      <tr><td><span class="pill get">GET</span></td><td><code>/api/geocode/reverse</code></td><td>Reverse geocoding for "use my current location" auto-fill.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/quote</code></td><td>OSRM distance + duration, then runs every active tier through <code>lib/pricing/fare.ts</code>.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/rides</code></td><td>Rider creates a ride. Inserts a row in status <code>requested</code>.</td></tr>
+      <tr><td><span class="pill get">GET</span></td><td><code>/api/rides/[id]</code></td><td>Fetch a single ride (RLS gates visibility).</td></tr>
+      <tr><td><span class="pill patch">PATCH</span></td><td><code>/api/rides/[id]</code></td><td>State machine: <code>accept</code> (atomic RPC), <code>arrive</code>, <code>start</code>, <code>complete</code>, <code>cancel</code>. <code>complete</code> recomputes the fare from actual distance &amp; duration.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/rides/[id]/rate</code></td><td>Rider or driver submits a 1–5 star rating + optional comment.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/payments/intent</code></td><td>Creates a payment intent through the active <code>PaymentProvider</code> (Stripe or mock).</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/payments/webhook</code></td><td>Stripe webhook receiver. Updates the <code>payments</code> row to paid / failed / refunded.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/complaints</code></td><td>Rider or driver files a complaint about the other party in a ride.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/driver/application</code></td><td>Submit / re-submit the driver application. Flips approval status to <code>submitted</code>.</td></tr>
+      <tr><td><span class="pill get">GET</span></td><td><code>/api/driver/application/status</code></td><td>Lightweight polling endpoint used by the onboarding screen.</td></tr>
+      <tr><td><span class="pill post">POST</span></td><td><code>/api/driver/documents/upload-url</code></td><td>Issues short-lived signed Storage URLs so the wizard uploads documents directly to Supabase without going through Next.js.</td></tr>
+      <tr><td><span class="pill get">GET</span></td><td><code>/api/driver/earnings</code></td><td>Driver earnings summary (totals + per-trip breakdown).</td></tr>
+      <tr><td><span class="pill patch">PATCH</span></td><td><code>/api/admin/drivers/[id]</code></td><td>Admin moderation endpoint: approve, reject, warn, ban, unban, set tier, set rating, verify. Every call writes a row in <code>driver_moderation_log</code>.</td></tr>
+      <tr><td><span class="pill del">DELETE</span></td><td><code>/api/profile</code></td><td>Permanently delete the caller's account via service-role <code>auth.admin.deleteUser</code>. Cascades remove every downstream row.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ====================== LIBS ====================== -->
+<section>
+  <h2 id="libs">11 · Shared libraries (<code>lib/</code>)</h2>
+
+  <h3><code>lib/auth/</code></h3>
+  <ul>
+    <li><code>routing.ts</code> — <code>isPublicPath</code>, <code>resolveHomePath</code>, <code>canAccess</code>.</li>
+    <li><code>session.ts</code> — <code>requireUser()</code> + <code>requireRole(...)</code> for server components.</li>
+  </ul>
+
+  <h3><code>lib/supabase/</code></h3>
+  <ul>
+    <li><code>client.ts</code> — browser Supabase client (anon key only).</li>
+    <li><code>server.ts</code> — request-bound server client + a service-role client used only by trusted route handlers (account deletion, payments webhook).</li>
+    <li><code>middleware.ts</code> — refreshes the session cookie on every request.</li>
+    <li><code>types.ts</code> — hand-maintained TypeScript types mirroring the schema.</li>
+  </ul>
+
+  <h3><code>lib/maps/</code></h3>
+  <ul>
+    <li><code>osrm.ts</code> — <code>routeBetween(a, b)</code> returns <code>{distanceKm, durationMin, polyline, coordinates}</code> with a haversine fallback.</li>
+    <li><code>nominatim.ts</code> — forward + reverse geocoding with a project-specific User-Agent.</li>
+    <li><code>types.ts</code> — <code>LatLng</code>, <code>RouteResult</code>, <code>PlaceSuggestion</code>.</li>
+    <li><code>use-geolocation.ts</code> — React hook wrapping <code>navigator.geolocation</code> as a state machine.</li>
+  </ul>
+
+  <h3><code>lib/pricing/</code></h3>
+  <ul>
+    <li><code>fare.ts</code> — <code>quoteFare({tier, distanceKm, durationMin})</code>. Pure function; unit-tested.</li>
+    <li><code>fare.test.ts</code> — Vitest coverage for the quote engine.</li>
+  </ul>
+
+  <h3><code>lib/payments/</code></h3>
+  <ul>
+    <li><code>provider.ts</code> — <code>PaymentProvider</code> TypeScript interface (<code>createIntent</code>, <code>verifyWebhook</code>, etc.).</li>
+    <li><code>stripe.ts</code> / <code>mock.ts</code> — concrete implementations.</li>
+    <li><code>index.ts</code> — factory selected by <code>PAYMENT_PROVIDER</code>.</li>
+  </ul>
+
+  <h3><code>lib/realtime/</code></h3>
+  <ul>
+    <li><code>channels.ts</code> — channel name conventions.</li>
+    <li><code>use-driver-location.ts</code> — <code>useDriverLocationPublisher</code> (driver side) + <code>useDriverLocation</code> (rider side).</li>
+    <li><code>use-ride.ts</code> — subscribe to a single ride's status updates.</li>
+  </ul>
+
+  <h3><code>lib/notifications/</code></h3>
+  <ul>
+    <li><code>admin.ts</code> — <code>buildAdminNotifications</code> (latest rides + new sign-ups, linked into <code>/admin/rides</code> &amp; <code>/admin/users</code>).</li>
+    <li><code>user.ts</code> — <code>buildUserNotifications</code> (rider/driver feed of ride status events).</li>
+  </ul>
+
+  <h3><code>lib/admin/</code></h3>
+  <ul>
+    <li><code>driver-moderation.ts</code> — service-role helper for the moderation endpoint. Applies the action and writes a log row.</li>
+    <li><code>signed-storage-url.ts</code> — issues time-bound URLs so the document gallery can render private files.</li>
+  </ul>
+
+  <h3><code>lib/driver/application-schema.ts</code></h3>
+  <p>Zod schema describing every wizard step + validation rules; reused server-side when accepting submissions.</p>
+
+  <h3><code>lib/utils/</code></h3>
+  <ul>
+    <li><code>cn.ts</code> — tailwind class-name joiner.</li>
+    <li><code>format.ts</code> — <code>formatMoney</code> (zero-decimal currencies handled), <code>formatDistance</code>, <code>formatDuration</code>.</li>
+  </ul>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ====================== REALTIME ====================== -->
+<section>
+  <h2 id="realtime">12 · Realtime, maps &amp; geolocation</h2>
+
+  <h3>Realtime channels</h3>
+  <ul>
+    <li><b>Driver location</b> — the driver client publishes its GPS every <code>NEXT_PUBLIC_DRIVER_LOCATION_INTERVAL_MS</code> (5&nbsp;s default) while online. The rider's active-trip screen subscribes to the driver's channel so the marker moves smoothly.</li>
+    <li><b>Ride status</b> — the rider (and driver) subscribe to their ride row in <code>rides</code>; status transitions trigger panel swaps without a reload.</li>
+    <li><b>Admin fleet</b> — <code>AdminLiveMap</code> subscribes to every <code>drivers</code> row and plots online drivers in realtime.</li>
+    <li><b>In-ride chat</b> — <code>messages</code> table is in the Realtime publication; new rows appear instantly on both sides.</li>
+  </ul>
+
+  <h3>Maps</h3>
+  <ul>
+    <li><b>Basemap</b> — CartoDB Dark Matter (dark theme) or Voyager (light theme). Theme-aware tile URL inside <code>RideMap</code>.</li>
+    <li><b>Markers</b> — custom div-icons drawn in the brand neon-green. Pickup pin, destination pin, animated car icon for the assigned driver, and small fleet dots for the admin view.</li>
+    <li><b>Route line</b> — three concentric strokes for a glow effect over the encoded polyline returned by OSRM.</li>
+    <li><b>Recentering</b> — <code>RideMap</code> exposes <code>recenterTo</code> (smooth <code>flyTo</code> without rendering a marker) and <code>markersHidden</code> (background-only use). The rider home uses both to follow the user's GPS coordinates.</li>
+  </ul>
+
+  <h3>Geolocation</h3>
+  <ul>
+    <li><code>useGeolocation</code> hook prompts for browser permission once on the rider home.</li>
+    <li>On success, the page reverse-geocodes the fix through <code>/api/geocode/reverse</code> and auto-fills the Pickup field with the resolved address (falling back to raw coordinates if the lookup misses).</li>
+    <li>An error boundary wraps the rider home so any failure surfaces a friendly retry card rather than crashing the page.</li>
+  </ul>
+</section>
+
+<!-- ====================== PAYMENTS ====================== -->
+<section>
+  <h2 id="payments">13 · Payments</h2>
+  <p>Payments are abstracted so we can swap providers without touching the UI.</p>
+  <ul>
+    <li><code>PaymentProvider</code> interface declares <code>createIntent</code>, <code>verifyWebhook</code>, etc.</li>
+    <li><b>Stripe</b> is the production implementation (Payment Intents API).</li>
+    <li><b>Mock</b> auto-completes intents for local development and demos. Selected when <code>PAYMENT_PROVIDER=mock</code>.</li>
+    <li>The rider's completed-ride panel calls <code>POST /api/payments/intent</code> as soon as the ride hits <code>completed</code>.</li>
+    <li>The Stripe webhook (<code>POST /api/payments/webhook</code>) updates <code>payments.status</code> to <code>paid</code>, <code>failed</code>, or <code>refunded</code>.</li>
+  </ul>
+  <div class="card warn">
+    <p><b>Production note.</b> Stripe supports MWK but merchant onboarding in Malawi is limited. The <code>PaymentProvider</code> interface is designed so a local provider (e.g. PayChangu, Airtel Money) can be added by implementing one file.</p>
+  </div>
+</section>
+
+<!-- ====================== ENV ====================== -->
+<section>
+  <h2 id="env">14 · Environment configuration</h2>
+  <p>Variables (names only — secrets are stored in the Render dashboard and never committed). See <code>.env.example</code> in the repo for shape.</p>
+  <table>
+    <thead><tr><th>Variable</th><th>Exposure</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>NEXT_PUBLIC_SITE_URL</code></td><td>Public</td><td>Origin used for callbacks &amp; webhooks.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td>Public</td><td>Supabase project URL.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td><td>Public</td><td>Anon key, gated by RLS.</td></tr>
+      <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Server only</td><td>Used by trusted route handlers (account deletion, payments webhook, moderation log inserts).</td></tr>
+      <tr><td><code>OSRM_BASE_URL</code></td><td>Server</td><td>Routing endpoint. Public demo is rate-limited — self-host for production.</td></tr>
+      <tr><td><code>NOMINATIM_BASE_URL</code></td><td>Server</td><td>Geocoding endpoint.</td></tr>
+      <tr><td><code>PAYMENT_PROVIDER</code></td><td>Server</td><td><code>stripe</code> or <code>mock</code>.</td></tr>
+      <tr><td><code>STRIPE_SECRET_KEY</code></td><td>Server only</td><td>Stripe secret.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code></td><td>Public</td><td>Stripe publishable key.</td></tr>
+      <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Server only</td><td>Webhook signature secret.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_DEFAULT_CURRENCY</code></td><td>Public</td><td>Default ISO currency (MWK).</td></tr>
+      <tr><td><code>NEXT_PUBLIC_DEFAULT_LAT</code> / <code>_LNG</code></td><td>Public</td><td>Map fallback centre when geolocation is unavailable.</td></tr>
+      <tr><td><code>NEXT_PUBLIC_DRIVER_LOCATION_INTERVAL_MS</code></td><td>Public</td><td>Driver GPS publish cadence.</td></tr>
+      <tr><td><code>RIDE_MATCH_RADIUS_KM</code></td><td>Server</td><td>Max distance for driver search.</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">Secret values live in Render &gt; Environment. Local development uses <code>.env.local</code> which is gitignored.</p>
+</section>
+
+<!-- ====================== DEV ====================== -->
+<section>
+  <h2 id="dev">15 · Development &amp; deployment workflow</h2>
+
+  <h3>Local scripts</h3>
+  <table>
+    <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>npm run dev</code></td><td>Next.js dev server on <code>localhost:3000</code>.</td></tr>
+      <tr><td><code>npm run build</code></td><td>Production build (used by Render).</td></tr>
+      <tr><td><code>npm run start</code></td><td>Run the production build locally.</td></tr>
+      <tr><td><code>npm run lint</code></td><td>ESLint.</td></tr>
+      <tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code>.</td></tr>
+      <tr><td><code>npm test</code></td><td>Vitest (pricing engine).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Database migrations</h3>
+  <p>Apply migrations in order from <code>supabase/migrations/</code> using the Supabase SQL editor (or the CLI's <code>db push</code>). Migrations are idempotent.</p>
+  <p>The seed file (<code>supabase/seed.sql</code>) inserts demo ride tiers and three test accounts (rider / driver / admin).</p>
+
+  <h3>Branching &amp; PRs</h3>
+  <ul>
+    <li>Feature branches off <code>main</code>, prefixed <code>cursor/&lt;short-name&gt;-d15d</code> for agent-driven work.</li>
+    <li>Pull requests target <code>main</code>; <code>main</code> auto-deploys to Render.</li>
+    <li>Every commit must pass <code>npm run typecheck</code> and <code>npm run build</code>.</li>
+  </ul>
+
+  <h3>Hosting</h3>
+  <ul>
+    <li><b>Web</b> — Render web service (Node + Next.js). Auto-deploys on push to <code>main</code>.</li>
+    <li><b>Backend</b> — Supabase project. Schema kept in sync via the migrations folder.</li>
+    <li><b>Maps / geocoding</b> — currently the public OSRM &amp; Nominatim instances; flip the env vars to a self-hosted or paid endpoint for production traffic.</li>
+  </ul>
+</section>
+
+<!-- ====================== GLOSSARY ====================== -->
+<section>
+  <h2 id="glossary">16 · Glossary</h2>
+  <dl class="kv">
+    <dt>Surface</dt><dd>A role-scoped section of the app — <i>rider</i>, <i>driver</i>, or <i>admin</i>. Each surface has its own layout, navigation, and Tailwind tokens.</dd>
+    <dt>Tier</dt><dd>A pricing tier in <code>ride_tiers</code> (e.g. Standard / Comfort / Lux). Drives both rider-side fare quotes and driver-matching.</dd>
+    <dt>RLS</dt><dd>Row-Level Security — Postgres policies enforced on every query made with the anon key.</dd>
+    <dt>RPC</dt><dd>A Postgres function callable via Supabase. We use <code>SECURITY DEFINER</code> functions for atomic operations (e.g. <code>accept_ride</code>) and admin predicates (<code>is_admin</code>).</dd>
+    <dt>Surge</dt><dd>Multiplier applied on top of the base fare formula. Configurable per tier and globally via <code>app_config</code>.</dd>
+    <dt>Approval status</dt><dd>State of a driver application — <code>draft → submitted → approved / rejected / banned</code>. Middleware blocks unapproved drivers from the dashboard.</dd>
+    <dt>Moderation log</dt><dd>Append-only audit trail of every admin action against a driver (approve, reject, warn, ban, unban, change tier, override rating, verify).</dd>
+  </dl>
+  <p class="footnote">Document generated 2026-05-21 from the live <code>main</code> branch. Re-generate any time the architecture changes substantially.</p>
+</section>
+
+</body>
+</html>
