@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { DriverShell } from "@/components/shared/role-shell";
+import type { NotificationItem } from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 import { formatDistance, formatDuration, formatMoney } from "@/lib/utils/format";
 
@@ -25,6 +26,7 @@ interface DriverHomeProps {
   vehicle: Vehicle | null;
   tiers: RideTier[];
   activeRideId: string | null;
+  notifications?: NotificationItem[];
 }
 
 export function DriverHome({
@@ -33,6 +35,7 @@ export function DriverHome({
   vehicle,
   tiers,
   activeRideId,
+  notifications,
 }: DriverHomeProps) {
   const router = useRouter();
   const [online, setOnline] = useState(driver?.status === "online");
@@ -142,7 +145,7 @@ export function DriverHome({
     : "Vehicle pending";
 
   return (
-    <DriverShell profile={profile}>
+    <DriverShell profile={profile} notifications={notifications}>
         <div className="flex flex-col gap-lg mt-sm">
           {/* Status Card */}
           <section className="glass-panel rounded-lg p-lg flex flex-col gap-lg">

@@ -6,6 +6,10 @@ import { useEffect, useState } from "react";
 
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { Avatar } from "@/components/ui/avatar";
+import {
+  NotificationsButton,
+  type NotificationItem,
+} from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
@@ -28,6 +32,8 @@ interface AdminSidebarProps {
   /** Used to render the mobile top app bar's admin pill. */
   adminName?: string | null;
   adminAvatarUrl?: string | null;
+  /** Items shown in the notifications sheet. */
+  notifications?: NotificationItem[];
 }
 
 /**
@@ -40,7 +46,11 @@ interface AdminSidebarProps {
  * collocated with the navigation it controls. The drawer auto-closes when
  * the route changes so tapping a nav item dismisses it.
  */
-export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
+export function AdminSidebar({
+  adminName,
+  adminAvatarUrl,
+  notifications,
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -89,13 +99,7 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
           </Link>
         </div>
         <div className="flex items-center gap-xs">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="p-sm rounded-md text-primary-container hover:bg-white/10 active:bg-white/15 transition-colors"
-          >
-            <MaterialIcon name="notifications" />
-          </button>
+          <NotificationsButton items={notifications} />
           <Link
             href="/admin/profile"
             aria-label="My profile"

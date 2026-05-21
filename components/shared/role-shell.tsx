@@ -6,6 +6,7 @@ import {
   MobileShell,
   type MobileShellNavItem,
 } from "@/components/shared/mobile-shell";
+import type { NotificationItem } from "@/components/shared/notifications-button";
 import type { Profile } from "@/lib/supabase/types";
 
 const RIDER_NAV: MobileShellNavItem[] = [
@@ -22,6 +23,7 @@ const DRIVER_NAV: MobileShellNavItem[] = [
 
 interface ShellProps {
   profile: Profile | null;
+  notifications?: NotificationItem[];
   children: React.ReactNode;
 }
 
@@ -30,7 +32,7 @@ interface ShellProps {
  * tabs and the signed-out "Sign in" CTA so every rider page renders the
  * exact same chrome.
  */
-export function RiderShell({ profile, children }: ShellProps) {
+export function RiderShell({ profile, notifications, children }: ShellProps) {
   const topRight = !profile ? (
     <Link
       href="/login?next=/rider"
@@ -47,6 +49,7 @@ export function RiderShell({ profile, children }: ShellProps) {
       avatarName={profile?.full_name ?? "Rider"}
       avatarSrc={profile?.avatar_url}
       topRight={topRight}
+      notifications={notifications}
     >
       {children}
     </MobileShell>
@@ -54,13 +57,14 @@ export function RiderShell({ profile, children }: ShellProps) {
 }
 
 /** Concrete `MobileShell` for the driver surface. */
-export function DriverShell({ profile, children }: ShellProps) {
+export function DriverShell({ profile, notifications, children }: ShellProps) {
   return (
     <MobileShell
       navItems={DRIVER_NAV}
       profileHref="/driver/profile"
       avatarName={profile?.full_name ?? "Driver"}
       avatarSrc={profile?.avatar_url}
+      notifications={notifications}
     >
       {children}
     </MobileShell>

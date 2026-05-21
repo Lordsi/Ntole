@@ -22,8 +22,13 @@ interface RideMapProps {
   drivers?: LatLng[] | null;
   /** Default center if no pickup/drop is provided. */
   center?: LatLng;
+  /** Re-center on this point whenever it changes — no marker is drawn.
+   *  Use for ambient backgrounds that should follow the rider's location. */
+  recenterTo?: LatLng | null;
   className?: string;
   zoom?: number;
+  /** Suppress all marker rendering — handy for the rider-home background. */
+  markersHidden?: boolean;
 }
 
 const DEFAULT_CENTER: LatLng = {
@@ -79,6 +84,17 @@ function FitBounds({ points }: { points: LatLng[] }) {
   return null;
 }
 
+function Recenter({ to, zoom }: { to: LatLng | null; zoom?: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!to) return;
+    map.flyTo([to.lat, to.lng], zoom ?? map.getZoom() ?? 14, {
+      duration: 0.9,
+    });
+  }, [to, map, zoom]);
+  return null;
+}
+
 export default function RideMap({
   pickup,
   drop,
@@ -86,18 +102,22 @@ export default function RideMap({
   driver,
   drivers,
   center,
+  recenterTo,
   className,
   zoom = 13,
+  markersHidden,
 }: RideMapProps) {
-  const initialCenter = pickup ?? driver ?? center ?? DEFAULT_CENTER;
+  const initialCenter =
+    pickup ?? driver ?? recenterTo ?? center ?? DEFAULT_CENTER;
   const fitPoints = useMemo(() => {
+    if (markersHidden) return [];
     const list: LatLng[] = [];
     if (pickup) list.push(pickup);
     if (drop) list.push(drop);
     if (driver) list.push(driver);
     if (drivers) list.push(...drivers);
     return list;
-  }, [pickup, drop, driver, drivers]);
+  }, [pickup, drop, driver, drivers, markersHidden]);
 
   const pickupIcon = useRef(dotIcon(ACCENT)).current;
   const dropIcon = useRef(dotIcon("#ffffff", "rgba(255,255,255,0.18)")).current;
@@ -130,21 +150,24 @@ export default function RideMap({
           detectRetina
           className="ntole-tile-layer"
         />
-        {drivers?.map((d, i) => (
-          <Marker
-            key={`fleet-${i}-${d.lat}-${d.lng}`}
-            position={[d.lat, d.lng]}
-            icon={fleetPinIcon}
-          />
-        ))}
-        {pickup && (
+        {!markersHidden &&
+          drivers?.map((d, i) => (
+            <Marker
+              key={`fleet-${i}-${d.lat}-${d.lng}`}
+              position={[d.lat, d.lng]}
+              icon={fleetPinIcon}
+            />
+          ))}
+        {!markersHidden && pickup && (
           <Marker position={[pickup.lat, pickup.lng]} icon={pickupIcon} />
         )}
-        {drop && <Marker position={[drop.lat, drop.lng]} icon={dropIcon} />}
-        {driver && (
+        {!markersHidden && drop && (
+          <Marker position={[drop.lat, drop.lng]} icon={dropIcon} />
+        )}
+        {!markersHidden && driver && (
           <Marker position={[driver.lat, driver.lng]} icon={driverPinIcon} />
         )}
-        {route && route.length > 1 && (
+        {!markersHidden && route && route.length > 1 && (
           <>
             {/* Outer halo for the "glowing neon" effect. */}
             <Polyline
@@ -180,6 +203,7 @@ export default function RideMap({
           </>
         )}
         <FitBounds points={fitPoints} />
+        <Recenter to={recenterTo ?? null} zoom={zoom} />
       </MapContainer>
       {/* Edge vignette to blend the map into the surrounding dark UI. */}
       <div

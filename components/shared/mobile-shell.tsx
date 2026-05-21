@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 
 import { Avatar } from "@/components/ui/avatar";
 import { MaterialIcon } from "@/components/ui/material-icon";
+import {
+  NotificationsButton,
+  type NotificationItem,
+} from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 
 export interface MobileShellNavItem {
@@ -24,6 +28,8 @@ interface MobileShellProps {
   /** Optional avatar inputs. Ignored when `topRight` is provided. */
   avatarName?: string;
   avatarSrc?: string | null;
+  /** Items shown in the notifications sheet (empty state if omitted). */
+  notifications?: NotificationItem[];
   children: React.ReactNode;
 }
 
@@ -46,6 +52,7 @@ export function MobileShell({
   topRight,
   avatarName,
   avatarSrc,
+  notifications,
   children,
 }: MobileShellProps) {
   const pathname = usePathname();
@@ -59,6 +66,7 @@ export function MobileShell({
         avatarName={avatarName}
         avatarSrc={avatarSrc}
         topRight={topRight}
+        notifications={notifications}
       />
 
       {/*
@@ -105,11 +113,13 @@ function TopAppBar({
   avatarName,
   avatarSrc,
   topRight,
+  notifications,
 }: {
   profileHref: string;
   avatarName?: string;
   avatarSrc?: string | null;
   topRight?: React.ReactNode;
+  notifications?: NotificationItem[];
 }) {
   return (
     <header
@@ -120,25 +130,18 @@ function TopAppBar({
         "flex justify-between items-center px-margin-mobile py-md",
       )}
     >
-      <button
-        type="button"
+      <Link
+        href={profileHref}
         aria-label="Menu"
         className="grid h-11 w-11 place-items-center rounded-full text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors active:scale-95 duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2"
       >
         <MaterialIcon name="menu" className="text-[28px]" />
-      </button>
+      </Link>
       <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary-container tracking-tighter">
         Ntole
       </h1>
       <div className="flex items-center gap-sm">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative grid h-11 w-11 place-items-center rounded-full text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-colors active:scale-95 duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2"
-        >
-          <MaterialIcon name="notifications" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-container rounded-full neon-glow-primary" />
-        </button>
+        <NotificationsButton items={notifications} />
         {topRight ?? (
           <Link
             href={profileHref}

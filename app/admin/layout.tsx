@@ -2,18 +2,23 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { requireRole } from "@/lib/auth/session";
-import { MaterialIcon } from "@/components/ui/material-icon";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/avatar";
-
+import { NotificationsButton } from "@/components/shared/notifications-button";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { buildAdminNotifications } from "@/lib/notifications/admin";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const { profile } = await requireRole("admin");
+  const supabase = await createServerSupabaseClient();
+  const notifications = await buildAdminNotifications(supabase);
+
   return (
     <div className="min-h-screen bg-background text-on-background font-body-md">
       <AdminSidebar
         adminName={profile?.full_name}
         adminAvatarUrl={profile?.avatar_url}
+        notifications={notifications}
       />
 
       {/* Main content: full-width on mobile (sidebar is a drawer), shifted
@@ -23,16 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {/* Desktop-only utility chrome — notifications + admin profile pill.
             On mobile these live in the top app bar inside <AdminSidebar />. */}
         <header className="hidden md:flex justify-end items-center gap-md mb-lg">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="glass-panel p-sm rounded-lg flex items-center gap-sm hover:bg-white/10 transition-colors"
-          >
-            <MaterialIcon
-              name="notifications"
-              className="text-primary-container"
-            />
-          </button>
+          <NotificationsButton items={notifications} tone="glass" />
           <Link
             href="/admin/profile"
             aria-label="My profile"
