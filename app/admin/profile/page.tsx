@@ -5,6 +5,7 @@ import { MaterialIcon } from "@/components/ui/material-icon";
 import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfileStats } from "@/components/shared/profile-stats";
+import { SignOutButton } from "@/components/shared/sign-out-button";
 import { formatMoney } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
@@ -121,6 +122,10 @@ export default async function AdminProfilePage() {
           Account
         </h2>
         <ProfileForm profile={profile} redirectAfterDelete="/login" />
+      </section>
+
+      <section className="mb-lg">
+        <SignOutButton />
       </section>
     </>
   );

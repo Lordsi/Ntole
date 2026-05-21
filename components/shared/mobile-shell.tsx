@@ -164,16 +164,15 @@ function MobileTopBar({
 }) {
   return (
     <header className="lg:hidden fixed top-0 inset-x-0 z-50 flex justify-between items-center px-margin-mobile py-md bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
+      {/* Brand sits flush-left now that the hamburger is gone — the bottom
+          nav already covers every top-level destination on mobile. */}
       <Link
         href={profileHref}
-        aria-label="Menu"
-        className="grid h-11 w-11 place-items-center rounded-full text-on-surface-variant hover:bg-white/5"
+        aria-label="Home"
+        className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary-container tracking-tighter"
       >
-        <MaterialIcon name="menu" />
-      </Link>
-      <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary-container tracking-tighter">
         Ntole
-      </h1>
+      </Link>
       <div className="flex items-center gap-xs">
         <ThemeToggle compact />
         <NotificationsButton items={notifications} />

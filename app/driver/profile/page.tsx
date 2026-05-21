@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfileStats } from "@/components/shared/profile-stats";
 import { DriverShell } from "@/components/shared/role-shell";
+import { SignOutButton } from "@/components/shared/sign-out-button";
 import { VehicleForm } from "@/components/driver/vehicle-form";
 import type { Driver, RideTier, Vehicle } from "@/lib/supabase/types";
 import { formatMoney } from "@/lib/utils/format";
@@ -122,6 +123,10 @@ export default async function DriverProfilePage() {
           assignedTierId={driverRes.data?.admin_assigned_tier_id}
           requestedTierId={driverRes.data?.requested_tier_id}
         />
+      </section>
+
+      <section className="mb-lg">
+        <SignOutButton />
       </section>
     </DriverShell>
   );

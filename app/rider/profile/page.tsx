@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfileStats } from "@/components/shared/profile-stats";
 import { RiderShell } from "@/components/shared/role-shell";
+import { SignOutButton } from "@/components/shared/sign-out-button";
 import { FavoriteDriversList } from "@/components/rider/favorite-drivers-list";
 import type { FavoriteDriverRow } from "@/components/rider/favorite-drivers-list";
 
@@ -145,6 +146,10 @@ export default async function RiderProfilePage() {
             className="text-on-surface-variant"
           />
         </Link>
+      </section>
+
+      <section className="mb-lg">
+        <SignOutButton />
       </section>
     </RiderShell>
   );
