@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { RideMap } from "@/components/map";
@@ -246,10 +247,13 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
                   {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min
                 </span>
               ) : (
-                <span className="text-primary-container text-label-sm font-label-sm flex items-center gap-xs">
-                  View All
+                <Link
+                  href="/rider/ride-options"
+                  className="text-primary-container text-label-sm font-label-sm flex items-center gap-xs hover:opacity-80 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container rounded-sm"
+                >
+                  View all
                   <MaterialIcon name="arrow_forward" className="text-[16px]" />
-                </span>
+                </Link>
               )}
             </div>
             <div className="flex gap-md overflow-x-auto pb-md no-scrollbar snap-x lg:flex lg:flex-col lg:gap-md lg:overflow-visible lg:pb-0 lg:snap-none">
