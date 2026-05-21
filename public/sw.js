@@ -1,7 +1,12 @@
 /* eslint-disable no-restricted-globals */
 // Minimal service worker for Ntole PWA. Network-first with a tiny static
 // cache for the app shell. Avoids caching API routes (always live).
-const VERSION = "ntole-v1";
+//
+// Bump VERSION whenever the deployed UI changes substantially so every
+// connected client throws away its old shell cache on the next page load.
+// Without this, the SW can keep serving the previous HTML/JS even after
+// the new build is on the server.
+const VERSION = "ntole-v3-2026-05-21";
 const SHELL_URLS = ["/", "/login", "/manifest.webmanifest", "/icons/icon-192.svg", "/icons/icon-512.svg"];
 
 self.addEventListener("install", (event) => {

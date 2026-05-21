@@ -491,14 +491,14 @@ function RiderHomeInner({
 
         {/* Mobile sticky CTA. Two layouts cross-fade: a wide pill at the
             top of the scroll, and a circular car FAB once the user has
-            scrolled. The wide pill sits above the bottom nav (bottom-20);
-            the FAB sits in the bottom-right corner where the nav used to
-            be, which is fine because the bottom nav also hides on scroll. */}
+            scrolled past the form. Slightly slower transition so the
+            morph feels deliberate rather than abrupt. */}
         <div
           className={cn(
-            "lg:hidden fixed inset-x-0 z-40 px-margin-mobile py-lg pointer-events-none transition-all duration-300 ease-out",
+            "lg:hidden fixed inset-x-0 z-40 px-margin-mobile py-lg pointer-events-none",
+            "transition-[opacity,transform,bottom] duration-500 ease-in-out will-change-transform",
             scrolled
-              ? "bottom-4 opacity-0 translate-y-2 pointer-events-none"
+              ? "bottom-4 opacity-0 translate-y-3 pointer-events-none"
               : "bottom-20 opacity-100 translate-y-0",
           )}
           aria-hidden={scrolled}
@@ -507,7 +507,8 @@ function RiderHomeInner({
         </div>
         <div
           className={cn(
-            "lg:hidden fixed right-margin-mobile z-40 transition-all duration-300 ease-out",
+            "lg:hidden fixed right-margin-mobile z-40",
+            "transition-[opacity,transform,bottom] duration-500 ease-in-out will-change-transform",
             scrolled
               ? "bottom-6 opacity-100 scale-100 pointer-events-auto"
               : "bottom-20 opacity-0 scale-75 pointer-events-none",
@@ -521,16 +522,16 @@ function RiderHomeInner({
             aria-label={requestLabel}
             title={requestLabel}
             className={cn(
-              "grid h-14 w-14 place-items-center rounded-full transition-all duration-200 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
+              "grid h-16 w-16 place-items-center rounded-full transition-all duration-300 ease-out active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
               canRequest && !requesting
-                ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.45)] neon-glow-primary"
+                ? "bg-primary-container text-on-primary-container shadow-[0_14px_40px_rgba(57,255,20,0.55)] neon-glow-primary animate-pulse-soft"
                 : "bg-surface-container-highest/90 text-on-surface-variant backdrop-blur",
             )}
           >
             <MaterialIcon
               name="directions_car"
               filled={canRequest && !requesting}
-              className="text-[28px]"
+              className="text-[30px]"
             />
           </button>
         </div>
@@ -555,13 +556,21 @@ function RequestRideButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "pointer-events-auto w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-150 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
+        "pointer-events-auto group w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-300 ease-out active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
         active
-          ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.25)]"
+          ? "bg-primary-container text-on-primary-container shadow-[0_14px_40px_rgba(57,255,20,0.5)] neon-glow-primary animate-pulse-soft"
           : "bg-surface-container-highest/90 backdrop-blur-md text-on-surface-variant",
       )}
     >
-      {label}
+      <span className="inline-flex items-center justify-center gap-sm">
+        <span>{label}</span>
+        {active && (
+          <MaterialIcon
+            name="arrow_forward"
+            className="text-[22px] transition-transform group-hover:translate-x-1"
+          />
+        )}
+      </span>
     </button>
   );
 }

@@ -31,7 +31,11 @@ export function LocationStack({
   }
 
   return (
-    <div className="glass-panel rounded-lg p-lg lg:p-md relative overflow-hidden">
+    // No `overflow-hidden` here — the autocomplete dropdown inside each
+    // LocationInput is absolutely positioned below the row and would be
+    // clipped otherwise. The card itself is still rounded; nothing visual
+    // is escaping its bounds.
+    <div className="glass-panel rounded-lg p-lg lg:p-md relative">
       <div className="flex flex-col gap-md lg:gap-sm">
         {/* Pickup */}
         <div className="flex items-center gap-md">

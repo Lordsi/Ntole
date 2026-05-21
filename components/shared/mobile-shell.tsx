@@ -200,15 +200,18 @@ function BottomNav({
   mapFirst: boolean;
 }) {
   // Auto-hide once the user scrolls so the map / page content gets the
-  // full canvas. Reappears on scroll-to-top.
-  const scrolled = useScrolled(80);
+  // full canvas. Reappears on scroll-to-top. Slightly slower easing and
+  // a fade-out so the disappearance feels intentional rather than
+  // snapping off-screen.
+  const scrolled = useScrolled(120);
   return (
     <nav
       className={cn(
-        "lg:hidden fixed bottom-0 inset-x-0 z-50 transition-transform duration-300 ease-out",
+        "lg:hidden fixed bottom-0 inset-x-0 z-50",
+        "transition-[transform,opacity] duration-500 ease-in-out will-change-transform",
         "bg-background/90 backdrop-blur-2xl border-t border-white/5 rounded-t-lg",
         "flex justify-around items-center h-20 pb-safe px-gutter",
-        scrolled && "translate-y-full",
+        scrolled ? "translate-y-full opacity-0" : "translate-y-0 opacity-100",
         !mapFirst && cn("mx-auto w-full", PHONE_MAX),
       )}
       aria-hidden={scrolled}

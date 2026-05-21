@@ -31,7 +31,10 @@ export function LocationInput({
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState<PlaceSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inflight = useRef<AbortController | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,20 +52,52 @@ export function LocationInput({
   function handleChange(next: string) {
     setQuery(next);
     setOpen(true);
+    setError(null);
     if (debounce.current) clearTimeout(debounce.current);
     if (next.trim().length < 2) {
       setResults([]);
+      setSearched(false);
+      setLoading(false);
+      inflight.current?.abort();
       return;
     }
-    debounce.current = setTimeout(async () => {
+    debounce.current = setTimeout(() => {
+      // Cancel any in-flight request — the user kept typing.
+      inflight.current?.abort();
+      const ctrl = new AbortController();
+      inflight.current = ctrl;
       setLoading(true);
-      try {
-        const res = await fetch(`/api/geocode?q=${encodeURIComponent(next)}`);
-        const data = await res.json();
-        setResults(data.results ?? []);
-      } finally {
-        setLoading(false);
-      }
+      setSearched(false);
+      fetch(`/api/geocode?q=${encodeURIComponent(next)}`, {
+        signal: ctrl.signal,
+      })
+        .then(async (r) => {
+          const data: { results?: PlaceSuggestion[]; error?: string } = await r
+            .json()
+            .catch(() => ({}));
+          if (ctrl.signal.aborted) return;
+          if (data.error) {
+            setResults([]);
+            setError(data.error);
+          } else {
+            setResults(data.results ?? []);
+            setError(null);
+          }
+          setSearched(true);
+        })
+        .catch((err) => {
+          if (ctrl.signal.aborted) return;
+          setResults([]);
+          setError(
+            err?.name === "AbortError"
+              ? null
+              : "Couldn't reach the location service.",
+          );
+          setSearched(true);
+        })
+        .finally(() => {
+          if (!ctrl.signal.aborted) setLoading(false);
+        });
     }, 350);
   }
 
@@ -114,11 +149,37 @@ export function LocationInput({
         )}
       </div>
 
-      {open && (results.length > 0 || loading) && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-sm max-h-72 overflow-auto rounded-md glass-panel p-xs shadow-card">
+      {open && (loading || error || results.length > 0 || searched) && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-sm max-h-72 overflow-auto rounded-md glass-panel-strong p-xs shadow-card border border-white/10">
           {loading && (
-            <p className="px-sm py-xs text-label-sm text-on-surface-variant">
+            <p className="flex items-center gap-xs px-sm py-xs text-label-sm text-on-surface-variant">
+              <MaterialIcon
+                name="progress_activity"
+                className="animate-spin text-[16px] text-primary-container"
+              />
               Searching…
+            </p>
+          )}
+          {!loading && error && (
+            <p className="flex items-start gap-xs px-sm py-xs text-label-sm text-error">
+              <MaterialIcon
+                name="error"
+                className="mt-0.5 text-[16px]"
+              />
+              <span>{error}</span>
+            </p>
+          )}
+          {!loading && !error && searched && results.length === 0 && (
+            <p className="flex items-start gap-xs px-sm py-xs text-label-sm text-on-surface-variant">
+              <MaterialIcon
+                name="search_off"
+                className="mt-0.5 text-[16px]"
+              />
+              <span>
+                No matches for{" "}
+                <span className="text-on-surface">&ldquo;{query}&rdquo;</span>.
+                Try a nearby landmark or full address.
+              </span>
             </p>
           )}
           {results.map((r) => (
