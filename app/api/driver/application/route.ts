@@ -107,13 +107,20 @@ export async function POST(request: Request) {
     driverPatch.requested_tier_id = input.requestedTierId;
   }
 
-  if (input.action === "submit") {
+  // The INSERT RLS policy on `drivers` historically only accepted rows in
+  // `approval_status = 'draft'`. To work on databases where migration
+  // 0005 hasn't been applied yet, we always create the row as 'draft'
+  // first (which passes RLS), then bump it to 'submitted' in a separate
+  // UPDATE if the user clicked Submit. The guard_driver_self_update
+  // trigger explicitly allows the draft → submitted transition.
+  const isFirstSubmit = !existing && input.action === "submit";
+  if (input.action === "submit" && existing) {
     driverPatch.approval_status = "submitted";
   } else if (!existing) {
     driverPatch.approval_status = "draft";
   }
 
-  const { data: driver, error: driverErr } = await supabase
+  const { data: upserted, error: driverErr } = await supabase
     .from("drivers")
     .upsert(driverPatch, { onConflict: "profile_id" })
     .select("*")
@@ -121,6 +128,24 @@ export async function POST(request: Request) {
 
   if (driverErr) {
     return NextResponse.json({ error: driverErr.message }, { status: 500 });
+  }
+
+  let driver: Driver = upserted;
+
+  if (isFirstSubmit) {
+    const { data: promoted, error: promoteErr } = await supabase
+      .from("drivers")
+      .update({ approval_status: "submitted" })
+      .eq("profile_id", profile.id)
+      .select("*")
+      .single<Driver>();
+    if (promoteErr) {
+      return NextResponse.json(
+        { error: promoteErr.message },
+        { status: 500 },
+      );
+    }
+    driver = promoted;
   }
 
   // When a rider submits the application, promote them to driver so the
