@@ -8,21 +8,31 @@ import {
 } from "@/components/shared/mobile-shell";
 import type { Profile } from "@/lib/supabase/types";
 
+/**
+ * Bottom-nav items lifted verbatim from the Stitch mocks. We use the
+ * mock's icon + label set so the chrome matches 1:1.
+ */
 const RIDER_NAV: MobileShellNavItem[] = [
   { href: "/rider", icon: "home", label: "Home" },
   { href: "/rider/history", icon: "history", label: "Activity" },
+  { href: "/rider/wallet", icon: "account_balance_wallet", label: "Wallet" },
   { href: "/rider/profile", icon: "person", label: "Profile" },
 ];
 
 const DRIVER_NAV: MobileShellNavItem[] = [
   { href: "/driver", icon: "dashboard", label: "Dashboard" },
-  { href: "/driver/earnings", icon: "account_balance_wallet", label: "Earnings" },
+  { href: "/driver/earnings", icon: "directions_car", label: "Rides" },
+  { href: "/driver/wallet", icon: "account_balance_wallet", label: "Wallet" },
   { href: "/driver/profile", icon: "person", label: "Profile" },
 ];
+
+import type { MobileShellLayout } from "@/components/shared/mobile-shell";
 
 interface ShellProps {
   profile: Profile | null;
   children: React.ReactNode;
+  layout?: MobileShellLayout;
+  mapSlot?: React.ReactNode;
 }
 
 /**
@@ -30,7 +40,7 @@ interface ShellProps {
  * tabs and the signed-out "Sign in" CTA so every rider page renders the
  * exact same chrome.
  */
-export function RiderShell({ profile, children }: ShellProps) {
+export function RiderShell({ profile, children, layout, mapSlot }: ShellProps) {
   const topRight = !profile ? (
     <Link
       href="/login?next=/rider"
@@ -47,6 +57,8 @@ export function RiderShell({ profile, children }: ShellProps) {
       avatarName={profile?.full_name ?? "Rider"}
       avatarSrc={profile?.avatar_url}
       topRight={topRight}
+      layout={layout}
+      mapSlot={mapSlot}
     >
       {children}
     </MobileShell>
@@ -54,13 +66,16 @@ export function RiderShell({ profile, children }: ShellProps) {
 }
 
 /** Concrete `MobileShell` for the driver surface. */
-export function DriverShell({ profile, children }: ShellProps) {
+export function DriverShell({ profile, children, layout, mapSlot }: ShellProps) {
   return (
     <MobileShell
       navItems={DRIVER_NAV}
       profileHref="/driver/profile"
       avatarName={profile?.full_name ?? "Driver"}
       avatarSrc={profile?.avatar_url}
+      topBarVariant="driver"
+      layout={layout}
+      mapSlot={mapSlot}
     >
       {children}
     </MobileShell>

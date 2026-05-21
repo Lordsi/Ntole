@@ -25,22 +25,14 @@ export default async function DriverEarningsPage() {
   return (
     <DriverShell profile={profile}>
       <PageHeader
-        title="Earnings"
-        subtitle="Lifetime payouts from completed rides."
-        icon="account_balance_wallet"
+        title="Rides"
+        subtitle="Completed trips and lifetime payouts."
+        icon="directions_car"
       />
 
       {/* Hero total tile — primary container so it reads as a money-positive
           surface. Mirrors the "GO ONLINE" hero card visually. */}
-      <section
-        className="rounded-lg p-lg flex flex-col items-center text-center gap-xs"
-        style={{
-          background:
-            "linear-gradient(150deg, rgba(57,255,20,0.18), rgba(57,255,20,0.04))",
-          boxShadow:
-            "inset 0 0 0 1px rgba(57,255,20,0.25), 0 8px 24px rgba(0,0,0,0.55)",
-        }}
-      >
+      <section className="glass-panel rounded-lg p-lg flex flex-col items-center text-center gap-xs border border-primary-container/15">
         <span className="font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant">
           Total Earned
         </span>

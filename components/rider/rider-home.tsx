@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
+import { RideMap } from "@/components/map";
+import { MaterialIcon } from "@/components/ui/material-icon";
 import { RiderShell } from "@/components/shared/role-shell";
 import { cn } from "@/lib/utils/cn";
 
@@ -155,29 +156,28 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         ? "Request Ride"
         : "Send Package";
 
+  const mapLayer = (
+    <div className="absolute inset-0">
+      <RideMap
+        pickup={pickup ? { lat: pickup.lat, lng: pickup.lng } : null}
+        drop={drop ? { lat: drop.lat, lng: drop.lng } : null}
+        className="h-full w-full opacity-90"
+      />
+      <div className="absolute inset-0 map-gradient-overlay pointer-events-none" />
+    </div>
+  );
+
   return (
-    <RiderShell profile={profile}>
+    <RiderShell profile={profile} layout="map-first" mapSlot={mapLayer}>
         {/* Hero Section */}
         <section className="mb-xl">
-          <h2 className="font-display-lg text-[40px] leading-tight text-primary font-extrabold tracking-tight max-w-[280px]">
+          <h2 className="font-display-lg text-[40px] lg:text-display-lg leading-tight text-primary font-extrabold tracking-tight max-w-[280px] lg:max-w-none">
             Where do you want to go?
           </h2>
-          {!isAuthed && (
-            <p className="mt-sm text-body-md text-on-surface-variant">
-              Preview fares as a guest.{" "}
-              <Link
-                href="/login?next=/rider"
-                className="text-primary-container hover:underline"
-              >
-                Sign in
-              </Link>{" "}
-              to book.
-            </p>
-          )}
         </section>
 
         {/* Main Interaction Hub */}
-        <div className="flex flex-col gap-lg">
+        <div className="flex flex-col gap-lg flex-grow">
           {/* Ride/Package Toggle */}
           <div className="flex justify-center">
             <div className="bg-surface-container-highest p-xs rounded-full flex w-full max-w-[320px]">
@@ -222,9 +222,14 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
               <h3 className="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase">
                 Choose a Ride
               </h3>
-              {distanceKm !== undefined && durationMin !== undefined && (
+              {distanceKm !== undefined && durationMin !== undefined ? (
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min
+                </span>
+              ) : (
+                <span className="text-primary-container text-label-sm font-label-sm flex items-center gap-xs">
+                  View All
+                  <MaterialIcon name="arrow_forward" className="text-[16px]" />
                 </span>
               )}
             </div>
@@ -251,25 +256,57 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
             </p>
           )}
 
-          {/* Primary CTA sits inline at the end of the form so it never
-              overlaps the destination input or tier cards. The bottom nav
-              still floats above it because MobileShell reserves bottom
-              padding via pb-32 on <main>. */}
-          <button
-            type="button"
+          <div aria-hidden className="h-20 lg:hidden" />
+        </div>
+
+        {/* Mobile: sticky CTA above bottom nav (Stitch mock) */}
+        <div className="lg:hidden fixed bottom-20 inset-x-0 z-40 px-margin-mobile py-lg pointer-events-none">
+          <RequestRideButton
+            label={requestLabel}
             disabled={!canRequest || requesting}
             onClick={requestRide}
-            className={cn(
-              "mt-md w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-150 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
-              canRequest && !requesting
-                ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.3)] neon-glow-primary"
-                : "bg-surface-container-highest text-on-surface-variant",
-            )}
-          >
-            {requestLabel}
-          </button>
+            active={canRequest && !requesting}
+          />
+        </div>
+
+        {/* Desktop: CTA lives inside the side panel */}
+        <div className="hidden lg:block mt-lg">
+          <RequestRideButton
+            label={requestLabel}
+            disabled={!canRequest || requesting}
+            onClick={requestRide}
+            active={canRequest && !requesting}
+          />
         </div>
     </RiderShell>
+  );
+}
+
+function RequestRideButton({
+  label,
+  disabled,
+  onClick,
+  active,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  active: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "pointer-events-auto w-full py-md rounded-full font-headline-md text-headline-md font-extrabold uppercase tracking-tight transition-all duration-150 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
+        active
+          ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.25)]"
+          : "bg-surface-container-highest/90 backdrop-blur-md text-on-surface-variant",
+      )}
+    >
+      {label}
+    </button>
   );
 }
 

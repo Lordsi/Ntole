@@ -29,7 +29,7 @@ export function PageHeader({ title, subtitle, icon }: PageHeaderProps) {
           {title}
         </h1>
         {subtitle && (
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
+          <p className="font-body-md text-body-md text-on-surface-variant">
             {subtitle}
           </p>
         )}

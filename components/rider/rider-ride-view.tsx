@@ -85,7 +85,7 @@ export function RiderRideView({
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-margin-mobile py-md flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 lg:right-[420px] z-50 px-margin-mobile py-md flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent backdrop-blur-sm">
         <Link
           href="/rider"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-surface-container-high/80 backdrop-blur-md border border-white/10 active:scale-95 transition-transform"
@@ -110,7 +110,7 @@ export function RiderRideView({
       )}
 
       {/* Bottom panel switches based on ride status. */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:left-auto lg:right-0 lg:w-[420px] lg:max-w-[min(420px,100%)]">
         {ride.status === "requested" && (
           <WaitingForMatchPanel
             ride={ride}
@@ -156,7 +156,7 @@ function FloatingRouteSummary({
   dropAddress?: string | null;
 }) {
   return (
-    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px]">
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px] lg:left-[calc(50%-210px)]">
       <div className="glass-card rounded-lg p-md flex items-center gap-md">
         <div className="flex flex-col items-center gap-xs">
           <div className="w-2 h-2 rounded-full bg-outline" />

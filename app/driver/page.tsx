@@ -9,7 +9,11 @@ export default async function DriverHomePage() {
   const { profile } = await requireRole("driver", "admin");
   const supabase = await createServerSupabaseClient();
 
-  const [driverRes, vehicleRes, tiersRes, activeRideRes] = await Promise.all([
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const [driverRes, vehicleRes, tiersRes, activeRideRes, todayRidesRes] =
+    await Promise.all([
     supabase
       .from("drivers")
       .select("*")
@@ -27,11 +31,24 @@ export default async function DriverHomePage() {
       .order("sort_order"),
     supabase
       .from("rides")
-      .select("id")
+      .select("id, drop_address")
       .eq("driver_id", profile!.id)
       .in("status", ["accepted", "en_route_to_pickup", "in_progress"])
-      .maybeSingle<{ id: string }>(),
+      .maybeSingle<{ id: string; drop_address: string | null }>(),
+    supabase
+      .from("rides")
+      .select("fare_minor, currency")
+      .eq("driver_id", profile!.id)
+      .eq("status", "completed")
+      .gte("completed_at", startOfDay.toISOString()),
   ]);
+
+  const todayRides = todayRidesRes.data ?? [];
+  const dailyEarningsMinor = todayRides.reduce(
+    (sum, r) => sum + (r.fare_minor ?? 0),
+    0,
+  );
+  const dailyEarningsCurrency = todayRides[0]?.currency ?? "MWK";
 
   return (
     <DriverHome
@@ -40,6 +57,9 @@ export default async function DriverHomePage() {
       vehicle={vehicleRes.data}
       tiers={(tiersRes.data ?? []) as RideTier[]}
       activeRideId={activeRideRes.data?.id ?? null}
+      activeRideDrop={activeRideRes.data?.drop_address ?? null}
+      dailyEarningsMinor={dailyEarningsMinor}
+      dailyEarningsCurrency={dailyEarningsCurrency}
     />
   );
 }

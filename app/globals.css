@@ -50,16 +50,16 @@ body {
 
 /* Neon glow halos around interactive accents. */
 .neon-glow-primary {
-  box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.28);
 }
 .neon-glow-intense {
-  box-shadow: 0 0 30px rgba(57, 255, 20, 0.6);
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.38);
 }
 .neon-glow {
-  box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.18);
 }
 .neon-glow-strong {
-  box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.3);
 }
 .neon-line {
   box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
@@ -73,6 +73,75 @@ body {
 /* Radial fade-to-background used behind ambient map images. */
 .map-gradient-overlay {
   background: radial-gradient(circle at center, transparent 0%, #121414 100%);
+}
+
+/* ------------------------------------------------------------------ */
+/* Stitch ambient "Night City" map backdrop                            */
+/*                                                                     */
+/* The Stitch mocks place a darkened satellite map behind the rider    */
+/* home and driver dashboard. We replicate the same vibe with pure CSS */
+/* (no third-party image fetch): a charcoal base + faint grid + a few  */
+/* neon "traffic" streaks + a radial vignette so the centered phone    */
+/* column reads as a glowing device on top of a city at night.         */
+/* ------------------------------------------------------------------ */
+
+.stitch-map-backdrop {
+  background-color: #0a0c0c;
+  background-image:
+    /* faint street grid */
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    /* sparse highlight grid */
+    linear-gradient(rgba(57, 255, 20, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 20, 0.04) 1px, transparent 1px),
+    /* neon "traffic" arteries */
+    radial-gradient(
+      ellipse 80% 8% at 30% 28%,
+      rgba(57, 255, 20, 0.18),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 6% 60% at 70% 55%,
+      rgba(57, 255, 20, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 5% at 50% 75%,
+      rgba(57, 255, 20, 0.12),
+      transparent 70%
+    ),
+    /* base wash */
+    linear-gradient(180deg, #08110a 0%, #0a0c0c 50%, #06080a 100%);
+  background-size:
+    48px 48px,
+    48px 48px,
+    192px 192px,
+    192px 192px,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0,
+    24px 24px,
+    24px 24px,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+}
+
+/* Used on top of `.stitch-map-backdrop` to keep the centered phone
+   column visually dominant — the backdrop fades into the body color
+   at the very center. */
+.stitch-map-vignette {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    transparent 0%,
+    rgba(18, 20, 20, 0.55) 55%,
+    #121414 100%
+  );
 }
 
 /* ------------------------------------------------------------------ */

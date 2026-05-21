@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { RideMap } from "@/components/map";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { DriverShell } from "@/components/shared/role-shell";
 import { cn } from "@/lib/utils/cn";
@@ -25,6 +26,9 @@ interface DriverHomeProps {
   vehicle: Vehicle | null;
   tiers: RideTier[];
   activeRideId: string | null;
+  activeRideDrop?: string | null;
+  dailyEarningsMinor: number;
+  dailyEarningsCurrency: string;
 }
 
 export function DriverHome({
@@ -33,6 +37,9 @@ export function DriverHome({
   vehicle,
   tiers,
   activeRideId,
+  activeRideDrop,
+  dailyEarningsMinor,
+  dailyEarningsCurrency,
 }: DriverHomeProps) {
   const router = useRouter();
   const [online, setOnline] = useState(driver?.status === "online");
@@ -141,8 +148,21 @@ export function DriverHome({
     ? `${vehicle.color ? `${vehicle.color} ` : ""}${vehicle.make} ${vehicle.model}`
     : "Vehicle pending";
 
+  const mapLayer = (
+    <div className="absolute inset-0">
+      <RideMap className="h-full w-full opacity-80" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(18,20,20,0.75) 0%, rgba(18,20,20,0.92) 100%)",
+        }}
+      />
+    </div>
+  );
+
   return (
-    <DriverShell profile={profile}>
+    <DriverShell profile={profile} layout="map-first" mapSlot={mapLayer}>
         <div className="flex flex-col gap-lg mt-sm">
           {/* Status Card */}
           <section className="glass-panel rounded-lg p-lg flex flex-col gap-lg">
@@ -178,7 +198,7 @@ export function DriverHome({
                 className={cn(
                   "w-48 h-48 rounded-full flex flex-col items-center justify-center gap-xs transition-all duration-300 active:scale-95 disabled:opacity-60",
                   online
-                    ? "bg-primary-container text-on-primary-container neon-glow-intense"
+                    ? "bg-primary-container text-on-primary-container shadow-[0_0_24px_rgba(57,255,20,0.35)]"
                     : "bg-surface-container-highest text-on-surface border border-outline-variant/30",
                 )}
               >
@@ -221,8 +241,10 @@ export function DriverHome({
                     <p className="font-label-sm text-label-sm text-on-surface-variant">
                       ACTIVE TRIP
                     </p>
-                    <p className="font-body-md text-body-md font-semibold">
-                      Resume your current trip
+                    <p className="font-body-md text-body-md font-semibold line-clamp-1">
+                      {activeRideDrop
+                        ? `Resume trip to ${activeRideDrop}`
+                        : "Resume your current trip"}
                     </p>
                   </div>
                 </div>
@@ -335,10 +357,11 @@ export function DriverHome({
           {/* Footer Earnings Link */}
           <Link
             href="/driver/earnings"
-            className="mt-xl flex items-center justify-center gap-sm p-lg rounded-xl bg-surface-container-low border border-white/5 text-primary-container font-label-md text-label-md hover:bg-surface-container-high transition-colors"
+            className="mt-xl flex items-center justify-center gap-sm p-lg rounded-xl glass-panel text-primary-container font-label-md text-label-md hover:bg-white/[0.07] transition-colors"
           >
             <MaterialIcon name="payments" />
-            View Daily Earnings
+            View Daily Earnings:{" "}
+            {formatMoney(dailyEarningsMinor, dailyEarningsCurrency)}
             <MaterialIcon name="arrow_forward" />
           </Link>
         </div>

@@ -427,7 +427,7 @@ function KpiTile({
     <div
       className={
         highlighted
-          ? "glass-panel p-lg rounded-lg neon-glow border-primary-container/30"
+          ? "glass-panel p-lg rounded-lg border border-primary-container/25"
           : "glass-panel p-lg rounded-lg"
       }
     >
