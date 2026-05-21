@@ -333,3 +333,23 @@
   background: transparent !important;
   border: none !important;
 }
+
+/* Marching-ants animation on the route overlay polyline. Leaflet renders
+   the polyline as an SVG <path>; we set a dashArray on it and animate
+   the stroke-dashoffset so the dashes appear to flow from pickup to
+   destination. The outer halo gets a gentle pulse to sell the same
+   "live" feeling. */
+@keyframes ntole-route-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -56; }
+}
+@keyframes ntole-route-halo-pulse {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.35; }
+}
+.ntole-route-flow {
+  animation: ntole-route-flow 1.6s linear infinite;
+}
+.ntole-route-halo {
+  animation: ntole-route-halo-pulse 2.4s ease-in-out infinite;
+}

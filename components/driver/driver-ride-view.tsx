@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -56,6 +57,45 @@ export function DriverRideView({
   const ride = useRide(initialRide);
   const router = useRouter();
   const next = NEXT_ACTION[ride.status];
+
+  // Same OSRM-driven animated route as the rider trip screen.
+  const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!Number.isFinite(ride.pickup_lat) || !Number.isFinite(ride.drop_lat))
+      return;
+    const ctrl = new AbortController();
+    fetch("/api/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pickup: { lat: ride.pickup_lat, lng: ride.pickup_lng },
+        drop: { lat: ride.drop_lat, lng: ride.drop_lng },
+        tierId: tier.id,
+      }),
+      signal: ctrl.signal,
+    })
+      .then(async (r) => {
+        if (!r.ok) return null;
+        const data = (await r.json()) as {
+          coordinates?: [number, number][];
+        };
+        return data.coordinates ?? null;
+      })
+      .then((coords) => {
+        if (ctrl.signal.aborted) return;
+        if (coords && coords.length > 1) setRouteCoords(coords);
+      })
+      .catch(() => undefined);
+    return () => ctrl.abort();
+  }, [
+    ride.pickup_lat,
+    ride.pickup_lng,
+    ride.drop_lat,
+    ride.drop_lng,
+    tier.id,
+  ]);
   const statusLabel =
     STATUS_LABEL[ride.status] ?? ride.status.replace(/_/g, " ");
 
@@ -94,6 +134,7 @@ export function DriverRideView({
         <RideMap
           pickup={{ lat: ride.pickup_lat, lng: ride.pickup_lng }}
           drop={{ lat: ride.drop_lat, lng: ride.drop_lng }}
+          route={routeCoords}
           className="h-full w-full"
         />
       </div>

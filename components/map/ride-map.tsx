@@ -208,6 +208,7 @@ export default function RideMap({
                 opacity: 0.15,
                 lineCap: "round",
                 lineJoin: "round",
+                className: "ntole-route-halo",
               }}
             />
             <Polyline
@@ -228,6 +229,19 @@ export default function RideMap({
                 opacity: 1,
                 lineCap: "round",
                 lineJoin: "round",
+              }}
+            />
+            {/* Marching-ants overlay — pickup ➜ destination flow. */}
+            <Polyline
+              positions={route}
+              pathOptions={{
+                color: "#ffffff",
+                weight: 3,
+                opacity: 0.9,
+                lineCap: "round",
+                lineJoin: "round",
+                dashArray: "0 14",
+                className: "ntole-route-flow",
               }}
             />
           </>

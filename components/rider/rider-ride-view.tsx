@@ -63,6 +63,40 @@ export function RiderRideView({
   const pickup = { lat: ride.pickup_lat, lng: ride.pickup_lng };
   const drop = { lat: ride.drop_lat, lng: ride.drop_lng };
 
+  // Fetch the OSRM-driven route geometry once per pickup/drop pair so the
+  // map can draw an animated polyline between the two pins. /api/quote
+  // already calls OSRM and returns the decoded coordinates, so we reuse
+  // that endpoint instead of duplicating the OSRM logic on the client.
+  const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!Number.isFinite(pickup.lat) || !Number.isFinite(drop.lat)) return;
+    const ctrl = new AbortController();
+    fetch("/api/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pickup, drop, tierId: tier.id }),
+      signal: ctrl.signal,
+    })
+      .then(async (r) => {
+        if (!r.ok) return null;
+        const data = (await r.json()) as {
+          coordinates?: [number, number][];
+        };
+        return data.coordinates ?? null;
+      })
+      .then((coords) => {
+        if (ctrl.signal.aborted) return;
+        if (coords && coords.length > 1) setRouteCoords(coords);
+      })
+      .catch(() => undefined);
+    return () => ctrl.abort();
+    // We deliberately depend on the primitive coordinates so the effect
+    // doesn't refire on every re-render of the parent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickup.lat, pickup.lng, drop.lat, drop.lng, tier.id]);
+
   const showStandardPanel =
     ride.status === "in_progress" || ride.status === "en_route_to_pickup";
 
@@ -79,6 +113,7 @@ export function RiderRideView({
           pickup={pickup}
           drop={drop}
           driver={driverCoords}
+          route={routeCoords}
           className="h-full w-full"
         />
         <div className="absolute inset-0 map-edge-vignette hidden lg:block pointer-events-none" />
