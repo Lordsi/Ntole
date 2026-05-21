@@ -80,7 +80,7 @@
   --glass-border-opacity: 0.08;
   --float-card-from: 255 255 255;
   --float-card-to: 248 249 247;
-  --map-bg: 232 235 228;
+  --map-bg: 214 216 210;
   --selection-bg: 26 143 14;
   --selection-fg: 255 255 255;
   --glow-strength: 0.12;
@@ -287,6 +287,11 @@
   background: rgb(var(--map-bg)) !important;
   font-family: inherit;
   outline: none;
+}
+
+/* Light mode: grey, desaturated basemap so panels and neon routes stand out. */
+.light .ntole-tile-layer--muted {
+  filter: saturate(0.35) brightness(0.94) contrast(1.04);
 }
 .leaflet-control-attribution {
   background: rgb(var(--background) / 0.75) !important;
