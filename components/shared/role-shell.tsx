@@ -33,6 +33,7 @@ interface ShellProps {
   children: React.ReactNode;
   layout?: MobileShellLayout;
   mapSlot?: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 /**
@@ -40,7 +41,13 @@ interface ShellProps {
  * tabs and the signed-out "Sign in" CTA so every rider page renders the
  * exact same chrome.
  */
-export function RiderShell({ profile, children, layout, mapSlot }: ShellProps) {
+export function RiderShell({
+  profile,
+  children,
+  layout,
+  mapSlot,
+  footer,
+}: ShellProps) {
   const topRight = !profile ? (
     <Link
       href="/login?next=/rider"
@@ -59,6 +66,7 @@ export function RiderShell({ profile, children, layout, mapSlot }: ShellProps) {
       topRight={topRight}
       layout={layout}
       mapSlot={mapSlot}
+      footer={footer}
     >
       {children}
     </MobileShell>
@@ -66,7 +74,13 @@ export function RiderShell({ profile, children, layout, mapSlot }: ShellProps) {
 }
 
 /** Concrete `MobileShell` for the driver surface. */
-export function DriverShell({ profile, children, layout, mapSlot }: ShellProps) {
+export function DriverShell({
+  profile,
+  children,
+  layout,
+  mapSlot,
+  footer,
+}: ShellProps) {
   return (
     <MobileShell
       navItems={DRIVER_NAV}
@@ -76,6 +90,7 @@ export function DriverShell({ profile, children, layout, mapSlot }: ShellProps) 
       topBarVariant="driver"
       layout={layout}
       mapSlot={mapSlot}
+      footer={footer}
     >
       {children}
     </MobileShell>

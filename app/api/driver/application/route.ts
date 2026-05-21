@@ -1,0 +1,165 @@
+import { NextResponse } from "next/server";
+
+import { requireRole } from "@/lib/auth/session";
+import {
+  ApplicationBody,
+  validateSubmitPayload,
+} from "@/lib/driver/application-schema";
+import {
+  createServerSupabaseClient,
+  createServiceSupabaseClient,
+} from "@/lib/supabase/server";
+import type { Driver } from "@/lib/supabase/types";
+
+export const runtime = "nodejs";
+
+export async function POST(request: Request) {
+  const { profile } = await requireRole("driver", "admin");
+  const parsed = ApplicationBody.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const input = parsed.data;
+  const supabase = await createServerSupabaseClient();
+  const service = createServiceSupabaseClient();
+
+  const { data: existing } = await supabase
+    .from("drivers")
+    .select("*")
+    .eq("profile_id", profile!.id)
+    .maybeSingle<Driver>();
+
+  if (
+    existing &&
+    !["draft", "rejected"].includes(existing.approval_status)
+  ) {
+    return NextResponse.json(
+      { error: "Application cannot be changed in the current state." },
+      { status: 409 },
+    );
+  }
+
+  if (input.action === "submit") {
+    const validationError = validateSubmitPayload(input);
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
+    }
+
+    const { data: banned } = await service.rpc("check_banned_identifiers", {
+      p_national_id: input.nationalId ?? "",
+      p_license_number: input.licenseNumber ?? "",
+    });
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          error:
+            "This national ID or license number is blocked from driver registration. Contact support if you believe this is an error.",
+        },
+        { status: 403 },
+      );
+    }
+  }
+
+  if (input.fullName || input.phone) {
+    await supabase
+      .from("profiles")
+      .update({
+        ...(input.fullName ? { full_name: input.fullName.trim() } : {}),
+        ...(input.phone !== undefined ? { phone: input.phone || null } : {}),
+      })
+      .eq("id", profile!.id);
+  }
+
+  const driverPatch: Record<string, unknown> = {
+    profile_id: profile!.id,
+    status: "offline",
+    is_verified: false,
+  };
+
+  if (input.nationalId !== undefined) driverPatch.national_id = input.nationalId;
+  if (input.licenseNumber !== undefined) {
+    driverPatch.license_number = input.licenseNumber;
+  }
+  if (input.licenseFrontPath !== undefined) {
+    driverPatch.license_front_path = input.licenseFrontPath;
+  }
+  if (input.licenseBackPath !== undefined) {
+    driverPatch.license_back_path = input.licenseBackPath;
+  }
+  if (input.carPhotoPaths !== undefined) {
+    driverPatch.car_photo_paths = input.carPhotoPaths;
+  }
+  if (input.vehicleBodyType !== undefined) {
+    driverPatch.vehicle_body_type = input.vehicleBodyType;
+  }
+  if (input.vehicleYear !== undefined) {
+    driverPatch.vehicle_year = input.vehicleYear;
+  }
+  if (input.requestedTierId !== undefined) {
+    driverPatch.requested_tier_id = input.requestedTierId;
+  }
+
+  if (input.action === "submit") {
+    driverPatch.approval_status = "submitted";
+  } else if (!existing) {
+    driverPatch.approval_status = "draft";
+  }
+
+  const { data: driver, error: driverErr } = await supabase
+    .from("drivers")
+    .upsert(driverPatch, { onConflict: "profile_id" })
+    .select("*")
+    .single<Driver>();
+
+  if (driverErr) {
+    return NextResponse.json({ error: driverErr.message }, { status: 500 });
+  }
+
+  if (
+    input.make &&
+    input.model &&
+    input.plateNumber &&
+    input.requestedTierId &&
+    input.seats
+  ) {
+    const vehiclePayload = {
+      driver_id: profile!.id,
+      tier_id: input.requestedTierId,
+      make: input.make,
+      model: input.model,
+      plate_number: input.plateNumber.toUpperCase(),
+      color: input.color ?? "",
+      seats: input.seats,
+    };
+
+    if (existing?.vehicle_id) {
+      await supabase
+        .from("vehicles")
+        .update(vehiclePayload)
+        .eq("id", existing.vehicle_id);
+    } else {
+      const { data: vehicle, error: vehErr } = await supabase
+        .from("vehicles")
+        .insert(vehiclePayload)
+        .select("id")
+        .single();
+
+      if (vehErr) {
+        return NextResponse.json({ error: vehErr.message }, { status: 500 });
+      }
+
+      await supabase
+        .from("drivers")
+        .update({ vehicle_id: vehicle.id })
+        .eq("profile_id", profile!.id);
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    driver,
+    approval_status: driver.approval_status,
+  });
+}

@@ -42,11 +42,15 @@ export function DriverHome({
   dailyEarningsCurrency,
 }: DriverHomeProps) {
   const router = useRouter();
-  const [online, setOnline] = useState(driver?.status === "online");
+  const canGoOnline =
+    driver?.approval_status === "approved" && driver?.is_verified === true;
+  const [online, setOnline] = useState(
+    canGoOnline && driver?.status === "online",
+  );
   const [busy, setBusy] = useState(false);
   const [incoming, setIncoming] = useState<Ride[]>([]);
 
-  useDriverLocationPublisher({ driverId: profile.id, enabled: online });
+  useDriverLocationPublisher({ driverId: profile.id, enabled: online && canGoOnline });
 
   // Subscribe to incoming requests in this tier.
   useEffect(() => {
@@ -103,6 +107,10 @@ export function DriverHome({
   }, [online, vehicle?.tier_id]);
 
   async function toggleOnline() {
+    if (!canGoOnline && !online) {
+      router.push("/driver/apply");
+      return;
+    }
     setBusy(true);
     try {
       const supabase = createBrowserSupabaseClient();
@@ -163,6 +171,30 @@ export function DriverHome({
             Driver console
           </p>
 
+          {!canGoOnline && (
+            <div className="glass-panel rounded-lg p-md border border-primary-container/20">
+              <p className="font-body-md text-body-md text-on-surface-variant">
+                {driver?.approval_status === "banned"
+                  ? (driver.ban_reason ??
+                    "Your account is banned. Contact support for help.")
+                  : driver?.approval_status === "submitted"
+                    ? "Your application is pending admin approval."
+                    : driver?.approval_status === "rejected"
+                      ? (driver.rejection_reason ??
+                        "Your application was rejected. Update and resubmit.")
+                      : "Complete your driver application before going online."}
+              </p>
+              {driver?.approval_status !== "banned" && (
+                <Link
+                  href="/driver/apply"
+                  className="inline-block mt-sm font-label-md text-primary-container underline"
+                >
+                  Open application
+                </Link>
+              )}
+            </div>
+          )}
+
           <section className="glass-panel rounded-xl p-lg flex flex-col gap-lg lg:gap-md">
             <div className="flex justify-between items-start">
               <div>
@@ -190,7 +222,7 @@ export function DriverHome({
             <div className="flex flex-col items-center justify-center py-xl lg:py-md lg:flex-row lg:justify-between lg:items-center lg:gap-lg">
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || (!canGoOnline && !online)}
                 onClick={toggleOnline}
                 className={cn(
                   "rounded-full flex flex-col items-center justify-center gap-xs transition-all duration-300 active:scale-95 disabled:opacity-60",

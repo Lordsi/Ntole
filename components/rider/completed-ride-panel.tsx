@@ -22,6 +22,12 @@ export function CompletedRidePanel({ ride, tier, riderId }: CompletedRidePanelPr
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [complaintCategory, setComplaintCategory] = useState<
+    "safety" | "behavior" | "vehicle" | "other"
+  >("behavior");
+  const [complaintBody, setComplaintBody] = useState("");
+  const [complaintBusy, setComplaintBusy] = useState(false);
+  const [complaintSent, setComplaintSent] = useState(false);
 
   // Kick off the payment intent on mount.
   useEffect(() => {
@@ -49,6 +55,32 @@ export function CompletedRidePanel({ ride, tier, riderId }: CompletedRidePanelPr
       cancelled = true;
     };
   }, [ride.id]);
+
+  async function submitComplaint() {
+    if (!ride.driver_id || complaintBody.trim().length < 10) return;
+    setComplaintBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/complaints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subjectDriverId: ride.driver_id,
+          rideId: ride.id,
+          category: complaintCategory,
+          body: complaintBody.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not file complaint");
+      setComplaintSent(true);
+      setComplaintBody("");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setComplaintBusy(false);
+    }
+  }
 
   async function submitRating() {
     if (!ride.driver_id) return;
@@ -127,6 +159,47 @@ export function CompletedRidePanel({ ride, tier, riderId }: CompletedRidePanelPr
         </Button>
         {error && <p className="text-xs text-danger">{error}</p>}
       </Card>
+
+      {ride.driver_id && (
+        <Card className="flex flex-col gap-3">
+          <p className="text-sm font-semibold">Report an issue</p>
+          <select
+            value={complaintCategory}
+            onChange={(e) =>
+              setComplaintCategory(
+                e.target.value as "safety" | "behavior" | "vehicle" | "other",
+              )
+            }
+            className="h-12 rounded-2xl bg-surface-2 px-4 text-sm"
+            disabled={complaintSent}
+          >
+            <option value="safety">Safety</option>
+            <option value="behavior">Behavior</option>
+            <option value="vehicle">Vehicle</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea
+            value={complaintBody}
+            onChange={(e) => setComplaintBody(e.target.value)}
+            placeholder="Describe the issue (min 10 characters)"
+            className="min-h-[80px] resize-none rounded-2xl bg-surface-2 p-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+            disabled={complaintSent}
+          />
+          <Button
+            variant="secondary"
+            onClick={submitComplaint}
+            disabled={
+              complaintBusy || complaintSent || complaintBody.trim().length < 10
+            }
+          >
+            {complaintSent
+              ? "Complaint submitted"
+              : complaintBusy
+                ? "Sending…"
+                : "File complaint"}
+          </Button>
+        </Card>
+      )}
     </div>
   );
 }

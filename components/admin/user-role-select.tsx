@@ -54,12 +54,15 @@ export function UserRoleSelect({ userId, role, selfId }: UserRoleSelectProps) {
     // Make sure a `drivers` row exists the moment someone is promoted to
     // driver, otherwise the driver portal blows up on first load.
     if (next === "driver") {
-      await supabase
-        .from("drivers")
-        .upsert(
-          { profile_id: userId, status: "offline", is_verified: false },
-          { onConflict: "profile_id", ignoreDuplicates: true },
-        );
+      await supabase.from("drivers").upsert(
+        {
+          profile_id: userId,
+          status: "offline",
+          is_verified: false,
+          approval_status: "draft",
+        },
+        { onConflict: "profile_id", ignoreDuplicates: false },
+      );
     }
     setBusy(false);
   }

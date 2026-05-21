@@ -1,8 +1,25 @@
 // Hand-written types for the Ntole schema. Keep in sync with
-// supabase/migrations/0001_init.sql.
+// supabase/migrations.
 
 export type UserRole = "rider" | "driver" | "admin";
 export type DriverStatus = "offline" | "online" | "on_trip";
+export type DriverApprovalStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "rejected"
+  | "banned";
+export type ComplaintCategory = "safety" | "behavior" | "vehicle" | "other";
+export type ComplaintStatus = "open" | "reviewed" | "dismissed";
+export type DriverModerationAction =
+  | "approve"
+  | "reject"
+  | "warn"
+  | "ban"
+  | "unban"
+  | "set_tier"
+  | "set_rating"
+  | "verify";
 export type RideStatus =
   | "requested"
   | "accepted"
@@ -75,6 +92,60 @@ export interface Driver {
   last_seen_at: string | null;
   license_number: string | null;
   is_verified: boolean;
+  approval_status: DriverApprovalStatus;
+  national_id: string | null;
+  national_id_normalized: string | null;
+  license_number_normalized: string | null;
+  license_front_path: string | null;
+  license_back_path: string | null;
+  car_photo_paths: string[];
+  vehicle_body_type: string | null;
+  requested_tier_id: string | null;
+  admin_assigned_tier_id: string | null;
+  vehicle_year: number | null;
+  rating_override: number | null;
+  rating_override_by: string | null;
+  rating_override_at: string | null;
+  warning_count: number;
+  banned_at: string | null;
+  ban_reason: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BannedIdentifier {
+  id: string;
+  national_id_normalized: string | null;
+  license_number_normalized: string | null;
+  banned_profile_id: string;
+  banned_by: string | null;
+  reason: string;
+  created_at: string;
+}
+
+export interface Complaint {
+  id: string;
+  reporter_id: string;
+  subject_driver_id: string;
+  ride_id: string | null;
+  category: ComplaintCategory;
+  body: string;
+  status: ComplaintStatus;
+  admin_notes: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DriverModerationEvent {
+  id: string;
+  driver_id: string;
+  admin_id: string | null;
+  action: DriverModerationAction;
+  payload: Record<string, unknown>;
+  notes: string | null;
+  created_at: string;
 }
 
 export interface Ride {
@@ -144,4 +215,12 @@ export interface AppConfig {
   match_radius_km: number;
   driver_ping_seconds: number;
   surge_multiplier: number;
+}
+
+/** Display rating for a driver profile. */
+export function driverDisplayRating(
+  driver: Pick<Driver, "rating_override">,
+  profile: Pick<Profile, "rating">,
+): number {
+  return driver.rating_override ?? profile.rating;
 }

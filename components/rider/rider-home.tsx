@@ -168,9 +168,25 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
     </div>
   );
 
+  const requestButton = (
+    <RequestRideButton
+      label={requestLabel}
+      disabled={!canRequest || requesting}
+      onClick={requestRide}
+      active={canRequest && !requesting}
+    />
+  );
+
   return (
-    <RiderShell profile={profile} layout="map-first" mapSlot={mapLayer}>
-        <section className="mb-lg lg:mb-xl">
+    <RiderShell
+      profile={profile}
+      layout="map-first"
+      mapSlot={mapLayer}
+      footer={
+        <div className="hidden lg:block">{requestButton}</div>
+      }
+    >
+        <section className="mb-lg lg:mb-md">
           <p className="hidden lg:block font-label-sm text-label-sm text-primary-container/90 uppercase tracking-[0.2em] mb-sm">
             Book a ride
           </p>
@@ -238,7 +254,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
                 </span>
               )}
             </div>
-            <div className="flex gap-md overflow-x-auto pb-md no-scrollbar snap-x lg:grid lg:grid-cols-3 lg:gap-sm lg:overflow-visible lg:pb-0 lg:snap-none">
+            <div className="flex gap-md overflow-x-auto pb-md no-scrollbar snap-x lg:flex lg:flex-col lg:gap-md lg:overflow-visible lg:pb-0 lg:snap-none">
               {tiers.map((tier) => (
                 <TierCard
                   key={tier.id}
@@ -266,21 +282,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
 
         {/* Mobile: sticky CTA above bottom nav (Stitch mock) */}
         <div className="lg:hidden fixed bottom-20 inset-x-0 z-40 px-margin-mobile py-lg pointer-events-none">
-          <RequestRideButton
-            label={requestLabel}
-            disabled={!canRequest || requesting}
-            onClick={requestRide}
-            active={canRequest && !requesting}
-          />
-        </div>
-
-        <div className="hidden lg:block sticky bottom-0 pt-md pb-xs bg-gradient-to-t from-[rgba(22,24,24,0.98)] to-transparent -mx-xl px-xl">
-          <RequestRideButton
-            label={requestLabel}
-            disabled={!canRequest || requesting}
-            onClick={requestRide}
-            active={canRequest && !requesting}
-          />
+          {requestButton}
         </div>
     </RiderShell>
   );

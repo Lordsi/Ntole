@@ -28,6 +28,8 @@ interface MobileShellProps {
   topBarVariant?: "rider" | "driver";
   layout?: MobileShellLayout;
   mapSlot?: React.ReactNode;
+  /** Pinned below scroll area on desktop map-first layout (e.g. primary CTA). */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -45,6 +47,7 @@ export function MobileShell({
   topBarVariant = "rider",
   layout = "content",
   mapSlot,
+  footer,
   children,
 }: MobileShellProps) {
   const pathname = usePathname();
@@ -76,10 +79,15 @@ export function MobileShell({
 
             {/* Floating command card — inset from map edges */}
             <div className="absolute z-10 inset-y-5 left-5 right-5 flex justify-end pointer-events-none">
-              <div className="desktop-float-card pointer-events-auto flex w-full max-w-[440px] flex-col max-h-full">
-                <div className="flex-1 overflow-y-auto px-xl pt-xl pb-lg custom-scrollbar">
+              <div className="desktop-float-card pointer-events-auto flex w-full max-w-[min(520px,40vw)] flex-col min-h-0 max-h-full">
+                <div className="flex-1 min-h-0 overflow-y-auto px-xl pt-xl pb-lg custom-scrollbar">
                   {children}
                 </div>
+                {footer ? (
+                  <div className="shrink-0 border-t border-white/10 px-xl py-md bg-[rgba(22,24,24,0.98)]">
+                    {footer}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

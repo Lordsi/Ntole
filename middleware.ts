@@ -31,6 +31,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (
+    profile?.role === "driver" &&
+    pathname.startsWith("/driver") &&
+    !pathname.startsWith("/driver/apply") &&
+    !pathname.startsWith("/driver/onboarding")
+  ) {
+    const { data: driver } = await supabase
+      .from("drivers")
+      .select("approval_status")
+      .eq("profile_id", user.id)
+      .maybeSingle();
+
+    if (
+      !driver ||
+      (driver.approval_status !== "approved" &&
+        driver.approval_status !== "banned")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/driver/apply";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return response;
 }
 

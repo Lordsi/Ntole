@@ -5,15 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import type { RideTier, Vehicle } from "@/lib/supabase/types";
+import type { DriverApprovalStatus, RideTier, Vehicle } from "@/lib/supabase/types";
 
 interface VehicleFormProps {
   driverId: string;
   vehicle: Vehicle | null;
   tiers: RideTier[];
+  approvalStatus?: DriverApprovalStatus;
+  assignedTierId?: string | null;
+  requestedTierId?: string | null;
 }
 
-export function VehicleForm({ driverId, vehicle, tiers }: VehicleFormProps) {
+export function VehicleForm({
+  driverId,
+  vehicle,
+  tiers,
+  approvalStatus = "draft",
+  assignedTierId,
+  requestedTierId,
+}: VehicleFormProps) {
   const [make, setMake] = useState(vehicle?.make ?? "");
   const [model, setModel] = useState(vehicle?.model ?? "");
   const [plate, setPlate] = useState(vehicle?.plate_number ?? "");
@@ -26,8 +36,21 @@ export function VehicleForm({ driverId, vehicle, tiers }: VehicleFormProps) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const approved = approvalStatus === "approved";
+  const tierReadOnly = !approved;
+
+  const displayTierId =
+    approved && assignedTierId
+      ? assignedTierId
+      : requestedTierId ?? tierId;
+  const displayTier = tiers.find((t) => t.id === displayTierId);
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (tierReadOnly && !vehicle) {
+      setError("Complete your driver application before adding a vehicle.");
+      return;
+    }
     setSaving(true);
     setSaved(false);
     setError(null);
@@ -35,7 +58,7 @@ export function VehicleForm({ driverId, vehicle, tiers }: VehicleFormProps) {
       const supabase = createBrowserSupabaseClient();
       const payload = {
         driver_id: driverId,
-        tier_id: tierId,
+        tier_id: approved ? (assignedTierId ?? tierId) : (requestedTierId ?? tierId),
         make,
         model,
         plate_number: plate,
@@ -46,12 +69,12 @@ export function VehicleForm({ driverId, vehicle, tiers }: VehicleFormProps) {
       if (vehicle) {
         res = await supabase.from("vehicles").update(payload).eq("id", vehicle.id);
       } else {
-        const { data, error } = await supabase
+        const { data, error: insErr } = await supabase
           .from("vehicles")
           .insert(payload)
           .select("*")
           .single();
-        res = { error };
+        res = { error: insErr };
         if (data) {
           await supabase
             .from("drivers")
@@ -73,6 +96,15 @@ export function VehicleForm({ driverId, vehicle, tiers }: VehicleFormProps) {
   return (
     <Card className="flex flex-col gap-3">
       <p className="text-sm font-semibold">Vehicle</p>
+      {!approved && (
+        <p className="text-xs text-on-surface-variant">
+          Service tier is assigned by an admin after approval. Complete{" "}
+          <a href="/driver/apply" className="text-primary-container underline">
+            your application
+          </a>{" "}
+          if you have not submitted yet.
+        </p>
+      )}
       <form onSubmit={save} className="flex flex-col gap-3">
         <div className="grid grid-cols-2 gap-3">
           <Input placeholder="Make" value={make} onChange={(e) => setMake(e.target.value)} />
@@ -98,17 +130,28 @@ export function VehicleForm({ driverId, vehicle, tiers }: VehicleFormProps) {
             onChange={(e) => setSeats(Number(e.target.value))}
           />
         </div>
-        <select
-          value={tierId}
-          onChange={(e) => setTierId(e.target.value)}
-          className="h-12 rounded-2xl bg-surface px-4 text-sm ring-1 ring-white/5 focus:outline-none focus:ring-2 focus:ring-accent"
-        >
-          {tiers.map((t) => (
-            <option key={t.id} value={t.id} className="bg-background">
-              {t.name}
-            </option>
-          ))}
-        </select>
+        {tierReadOnly ? (
+          <div className="rounded-2xl bg-surface px-4 py-3 text-sm ring-1 ring-white/5">
+            <span className="text-on-surface-variant block text-xs uppercase tracking-wide mb-1">
+              {approved ? "Assigned tier" : "Requested tier (pending review)"}
+            </span>
+            <span className="text-on-surface font-medium">
+              {displayTier?.name ?? "—"}
+            </span>
+          </div>
+        ) : (
+          <select
+            value={tierId}
+            onChange={(e) => setTierId(e.target.value)}
+            className="h-12 rounded-2xl bg-surface px-4 text-sm ring-1 ring-white/5 focus:outline-none focus:ring-2 focus:ring-accent"
+          >
+            {tiers.map((t) => (
+              <option key={t.id} value={t.id} className="bg-background">
+                {t.name}
+              </option>
+            ))}
+          </select>
+        )}
         <Button type="submit" disabled={saving}>
           {saving ? "Saving..." : saved ? "Saved" : vehicle ? "Update vehicle" : "Add vehicle"}
         </Button>

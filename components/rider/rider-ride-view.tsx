@@ -108,7 +108,7 @@ export function RiderRideView({
         />
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:static lg:flex lg:items-end lg:justify-center lg:p-6 lg:w-[440px] lg:shrink-0 lg:z-10">
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:static lg:flex lg:items-end lg:justify-center lg:p-6 lg:w-[min(520px,40vw)] lg:shrink-0 lg:z-10">
         <div className="w-full lg:desktop-float-card lg:overflow-hidden lg:rounded-2xl">
         {ride.status === "requested" && (
           <WaitingForMatchPanel
@@ -156,7 +156,7 @@ function FloatingRouteSummary({
   dropAddress?: string | null;
 }) {
   return (
-    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px] lg:left-auto lg:right-[calc(440px+2rem)] lg:translate-x-0 lg:top-8">
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px] lg:left-auto lg:right-[calc(min(520px,40vw)+2rem)] lg:translate-x-0 lg:top-8">
       <div className="glass-card rounded-lg p-md flex items-center gap-md">
         <div className="flex flex-col items-center gap-xs">
           <div className="w-2 h-2 rounded-full bg-outline" />

@@ -50,37 +50,42 @@ export function TierCard({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "snap-center min-w-[160px] lg:min-w-0 lg:w-full glass-panel p-md rounded-xl flex flex-col gap-sm text-left transition-all duration-200 active:scale-[0.98] hover:border-white/20",
+        "snap-center min-w-[160px] lg:min-w-0 lg:w-full glass-panel p-md rounded-xl flex flex-col gap-sm lg:flex-row lg:items-center lg:gap-md text-left transition-all duration-200 active:scale-[0.98] hover:border-white/20",
         active && "border-primary-container/40 bg-primary-container/5 ring-1 ring-primary-container/20",
       )}
     >
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start lg:contents">
         <MaterialIcon
           name={symbol}
           filled={active}
           className={cn(
-            "text-[32px]",
+            "text-[32px] lg:shrink-0",
             active ? "text-primary-container" : "text-on-surface-variant",
           )}
         />
         {badge && active && (
-          <span className="bg-primary-container/20 text-primary-container px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider">
+          <span className="bg-primary-container/20 text-primary-container px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider lg:hidden">
             {badge}
           </span>
         )}
       </div>
-      <div>
+      <div className="lg:flex-1 lg:min-w-0">
         <p className="font-headline-md text-headline-md text-on-surface">
           {tier.name}
         </p>
         <div className="flex items-center gap-xs text-on-surface-variant">
           <MaterialIcon name="group" className="text-[14px]" />
           <span className="text-label-sm font-label-sm">{tier.seats}</span>
+          {badge && active && (
+            <span className="hidden lg:inline bg-primary-container/20 text-primary-container px-sm py-[2px] rounded-full text-[10px] font-bold tracking-wider ml-sm">
+              {badge}
+            </span>
+          )}
         </div>
       </div>
       <p
         className={cn(
-          "font-label-md text-label-md mt-sm font-bold",
+          "font-label-md text-label-md mt-sm lg:mt-0 font-bold lg:ml-auto lg:text-right lg:shrink-0",
           active ? "text-primary-container" : "text-on-surface",
         )}
       >

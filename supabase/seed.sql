@@ -162,25 +162,37 @@ begin
 
   insert into public.drivers (
     profile_id, vehicle_id, status, current_lat, current_lng,
-    last_seen_at, license_number, is_verified
+    last_seen_at, license_number, is_verified, approval_status,
+    national_id, vehicle_body_type, admin_assigned_tier_id, requested_tier_id
   )
-  values (
+  select
     driver_id,
     '44444444-4444-4444-4444-444444444444'::uuid,
     'online',
     -13.9626, 33.7741,
     now(),
     'MW-DL-000482',
-    true
-  )
+    true,
+    'approved'::driver_approval_status,
+    'MW-NID-000482',
+    'suv',
+    rt.id,
+    rt.id
+  from public.ride_tiers rt
+  where rt.name = 'Standard'
   on conflict (profile_id) do update set
-    vehicle_id     = excluded.vehicle_id,
-    status         = excluded.status,
-    current_lat    = excluded.current_lat,
-    current_lng    = excluded.current_lng,
-    last_seen_at   = excluded.last_seen_at,
-    license_number = excluded.license_number,
-    is_verified    = excluded.is_verified;
+    vehicle_id            = excluded.vehicle_id,
+    status                = excluded.status,
+    current_lat           = excluded.current_lat,
+    current_lng           = excluded.current_lng,
+    last_seen_at          = excluded.last_seen_at,
+    license_number        = excluded.license_number,
+    is_verified           = excluded.is_verified,
+    approval_status       = excluded.approval_status,
+    national_id           = excluded.national_id,
+    vehicle_body_type     = excluded.vehicle_body_type,
+    admin_assigned_tier_id = excluded.admin_assigned_tier_id,
+    requested_tier_id     = excluded.requested_tier_id;
 
   -- A nicer-looking starter profile for the driver (high trip count, etc.).
   update public.profiles

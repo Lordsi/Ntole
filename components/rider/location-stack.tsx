@@ -31,8 +31,8 @@ export function LocationStack({
   }
 
   return (
-    <div className="glass-panel rounded-lg p-lg relative overflow-hidden">
-      <div className="flex flex-col gap-md">
+    <div className="glass-panel rounded-lg p-lg lg:p-md relative overflow-hidden">
+      <div className="flex flex-col gap-md lg:gap-sm">
         {/* Pickup */}
         <div className="flex items-center gap-md">
           <div className="w-6 flex flex-col items-center">

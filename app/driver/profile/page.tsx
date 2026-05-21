@@ -5,7 +5,7 @@ import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfileStats } from "@/components/shared/profile-stats";
 import { DriverShell } from "@/components/shared/role-shell";
 import { VehicleForm } from "@/components/driver/vehicle-form";
-import type { RideTier, Vehicle } from "@/lib/supabase/types";
+import type { Driver, RideTier, Vehicle } from "@/lib/supabase/types";
 import { formatMoney } from "@/lib/utils/format";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,12 @@ export default async function DriverProfilePage() {
   if (!profile) return null;
   const supabase = await createServerSupabaseClient();
 
-  const [vehicleRes, tiersRes, ridesRes] = await Promise.all([
+  const [driverRes, vehicleRes, tiersRes, ridesRes] = await Promise.all([
+    supabase
+      .from("drivers")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle<Driver>(),
     supabase
       .from("vehicles")
       .select("*")
@@ -113,6 +118,9 @@ export default async function DriverProfilePage() {
           driverId={profile.id}
           vehicle={vehicleRes.data ?? null}
           tiers={(tiersRes.data ?? []) as RideTier[]}
+          approvalStatus={driverRes.data?.approval_status ?? "draft"}
+          assignedTierId={driverRes.data?.admin_assigned_tier_id}
+          requestedTierId={driverRes.data?.requested_tier_id}
         />
       </section>
     </DriverShell>
