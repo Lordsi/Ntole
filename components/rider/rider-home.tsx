@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { RideMap } from "@/components/map";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { RiderShell } from "@/components/shared/role-shell";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import type { NotificationItem } from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 import { useGeolocation } from "@/lib/maps/use-geolocation";
@@ -39,7 +40,15 @@ interface PendingRide {
   selectedTierId: string;
 }
 
-export function RiderHome({
+export function RiderHome(props: RiderHomeProps) {
+  return (
+    <ErrorBoundary label="RiderHome">
+      <RiderHomeInner {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function RiderHomeInner({
   profile,
   tiers,
   recentTrips = [],
@@ -85,35 +94,57 @@ export function RiderHome({
   }, [isAuthed]);
 
   // Reverse-geocode the GPS fix into a real address and auto-fill pickup.
+  // Effect depends only on the resolved coords (not the full `geo` state
+  // object) so unrelated re-renders don't retrigger the fetch.
+  const readyCoords =
+    geo.status === "ready" ? geo.coords : null;
+  const readyLat = readyCoords?.lat ?? null;
+  const readyLng = readyCoords?.lng ?? null;
+
   useEffect(() => {
-    if (geo.status !== "ready" || pickup) return;
-    const { coords } = geo;
+    if (readyLat == null || readyLng == null || pickup) return;
     let cancelled = false;
     setAutoFillingPickup(true);
-    fetch(`/api/geocode/reverse?lat=${coords.lat}&lng=${coords.lng}`)
-      .then((r) => r.json())
-      .then((data: { result: PlaceSuggestion | null }) => {
-        if (cancelled) return;
-        if (data.result) {
-          setPickup(data.result);
-          setCity(extractCity(data.result.label));
-        } else {
-          // Even without a label, seed pickup with raw coords so the user
-          // can immediately get a quote.
-          setPickup({
-            label: `My location · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`,
-            address: `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`,
-            lat: coords.lat,
-            lng: coords.lng,
-          });
+    const fallbackPickup = (): PlaceSuggestion => ({
+      label: `My location · ${readyLat.toFixed(4)}, ${readyLng.toFixed(4)}`,
+      address: `${readyLat.toFixed(6)}, ${readyLng.toFixed(6)}`,
+      lat: readyLat,
+      lng: readyLng,
+    });
+    fetch(`/api/geocode/reverse?lat=${readyLat}&lng=${readyLng}`)
+      .then(async (r) => {
+        if (!r.ok) return null;
+        try {
+          const json = (await r.json()) as { result?: PlaceSuggestion | null };
+          return json?.result ?? null;
+        } catch {
+          return null;
         }
       })
-      .catch(() => undefined)
-      .finally(() => !cancelled && setAutoFillingPickup(false));
+      .then((result) => {
+        if (cancelled) return;
+        if (
+          result &&
+          typeof result.label === "string" &&
+          Number.isFinite(result.lat) &&
+          Number.isFinite(result.lng)
+        ) {
+          setPickup(result);
+          setCity(extractCity(result.label));
+        } else {
+          setPickup(fallbackPickup());
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPickup(fallbackPickup());
+      })
+      .finally(() => {
+        if (!cancelled) setAutoFillingPickup(false);
+      });
     return () => {
       cancelled = true;
     };
-  }, [geo, pickup]);
+  }, [readyLat, readyLng, pickup]);
 
   useEffect(() => {
     if (!pickup || !drop) {
@@ -204,13 +235,30 @@ export function RiderHome({
         ? "Request Ride"
         : "Send Package";
 
-  const userCoords = geo.status === "ready" ? geo.coords : null;
+  // Memoize the {lat, lng} objects so unrelated renders of RiderHome don't
+  // produce fresh references, which would re-fire FitBounds/Recenter every
+  // tick. The map only needs to update when the actual coordinates change.
+  const pickupLatLng = useMemo(
+    () => (pickup ? { lat: pickup.lat, lng: pickup.lng } : null),
+    [pickup?.lat, pickup?.lng],
+  );
+  const dropLatLng = useMemo(
+    () => (drop ? { lat: drop.lat, lng: drop.lng } : null),
+    [drop?.lat, drop?.lng],
+  );
+  const recenterTarget = useMemo(
+    () =>
+      !pickupLatLng && !dropLatLng && readyLat != null && readyLng != null
+        ? { lat: readyLat, lng: readyLng }
+        : null,
+    [pickupLatLng, dropLatLng, readyLat, readyLng],
+  );
   const mapLayer = (
     <div className="absolute inset-0">
       <RideMap
-        pickup={pickup ? { lat: pickup.lat, lng: pickup.lng } : null}
-        drop={drop ? { lat: drop.lat, lng: drop.lng } : null}
-        recenterTo={!pickup && !drop ? userCoords : null}
+        pickup={pickupLatLng}
+        drop={dropLatLng}
+        recenterTo={recenterTarget}
         className="h-full w-full"
       />
       <div className="absolute inset-0 map-gradient-overlay lg:hidden pointer-events-none" />

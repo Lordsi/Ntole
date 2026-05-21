@@ -71,16 +71,38 @@ function fleetIcon() {
   });
 }
 
+function isFiniteLatLng(p: LatLng | null | undefined): p is LatLng {
+  return (
+    !!p &&
+    Number.isFinite(p.lat) &&
+    Number.isFinite(p.lng) &&
+    p.lat >= -90 &&
+    p.lat <= 90 &&
+    p.lng >= -180 &&
+    p.lng <= 180
+  );
+}
+
 function FitBounds({ points }: { points: LatLng[] }) {
   const map = useMap();
   useEffect(() => {
-    if (points.length === 0) return;
-    if (points.length === 1) {
-      map.setView([points[0].lat, points[0].lng], 14, { animate: true });
-      return;
+    if (!map) return;
+    const valid = points.filter(isFiniteLatLng);
+    if (valid.length === 0) return;
+    try {
+      if (valid.length === 1) {
+        map.setView([valid[0].lat, valid[0].lng], 14, { animate: true });
+        return;
+      }
+      const bounds: LatLngBoundsExpression = valid.map((p) => [p.lat, p.lng]);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    } catch (err) {
+      // Leaflet occasionally throws if the map container isn't sized yet
+      // (e.g. when re-mounting inside a dynamically-shown sheet). Swallow
+      // — the user can pan manually and the next re-render fixes things.
+      // eslint-disable-next-line no-console
+      console.warn("[RideMap] FitBounds failed", err);
     }
-    const bounds: LatLngBoundsExpression = points.map((p) => [p.lat, p.lng]);
-    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
   }, [points, map]);
   return null;
 }
@@ -88,10 +110,14 @@ function FitBounds({ points }: { points: LatLng[] }) {
 function Recenter({ to, zoom }: { to: LatLng | null; zoom?: number }) {
   const map = useMap();
   useEffect(() => {
-    if (!to) return;
-    map.flyTo([to.lat, to.lng], zoom ?? map.getZoom() ?? 14, {
-      duration: 0.9,
-    });
+    if (!map || !isFiniteLatLng(to)) return;
+    try {
+      const target = zoom ?? map.getZoom() ?? 14;
+      map.flyTo([to.lat, to.lng], target, { duration: 0.9 });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("[RideMap] Recenter failed", err);
+    }
   }, [to, map, zoom]);
   return null;
 }
