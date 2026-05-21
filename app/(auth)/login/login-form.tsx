@@ -171,7 +171,6 @@ export function LoginForm() {
         )}
       </button>
 
-      <DemoCredentials onPick={setEmail} />
     </form>
   );
 }
@@ -208,43 +207,3 @@ function Field({ icon, label, className, ...input }: FieldProps) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Demo credentials disclosure                                        */
-/* ------------------------------------------------------------------ */
-
-function DemoCredentials({ onPick }: { onPick: (email: string) => void }) {
-  const accounts = [
-    { label: "Rider", email: "rider@ntole.test" },
-    { label: "Driver", email: "driver@ntole.test" },
-    { label: "Admin", email: "admin@ntole.test" },
-  ];
-  return (
-    <details className="mt-md rounded-md glass-panel p-md">
-      <summary className="cursor-pointer select-none font-label-sm text-label-sm uppercase tracking-[0.12em] text-on-surface-variant hover:text-on-surface">
-        Demo accounts
-      </summary>
-      <ul className="mt-sm flex flex-col gap-xs">
-        {accounts.map((a) => (
-          <li key={a.email}>
-            <button
-              type="button"
-              onClick={() => onPick(a.email)}
-              className="w-full flex items-center justify-between gap-md rounded-sm px-xs py-xs text-left hover:bg-white/5 transition-colors"
-            >
-              <span className="font-body-sm text-body-sm text-on-surface">
-                {a.label}
-              </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant">
-                {a.email}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-sm font-body-sm text-body-sm text-on-surface-variant">
-        Shared password:{" "}
-        <span className="text-on-surface">Password123!</span>
-      </p>
-    </details>
-  );
-}
