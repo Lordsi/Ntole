@@ -18,14 +18,14 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, subtitle, icon }: PageHeaderProps) {
   return (
-    <div className="mb-lg flex items-center gap-md">
+    <div className="mb-lg lg:mb-xl flex items-center gap-md">
       {icon && (
         <div className="grid h-10 w-10 place-items-center rounded-md bg-primary-container/10 text-primary-container">
           <MaterialIcon name={icon} />
         </div>
       )}
       <div className="flex flex-col">
-        <h1 className="font-headline-md text-headline-md text-on-surface">
+        <h1 className="font-headline-md text-headline-md lg:text-headline-lg lg:font-headline-lg text-on-surface">
           {title}
         </h1>
         {subtitle && (

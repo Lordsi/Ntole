@@ -50,8 +50,8 @@ export function TierCard({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "snap-center min-w-[160px] glass-panel p-md rounded-lg flex flex-col gap-sm text-left transition-all duration-200 active:scale-[0.98]",
-        active && "border-primary-container/40 bg-primary-container/5",
+        "snap-center min-w-[160px] lg:min-w-0 lg:w-full glass-panel p-md rounded-xl flex flex-col gap-sm text-left transition-all duration-200 active:scale-[0.98] hover:border-white/20",
+        active && "border-primary-container/40 bg-primary-container/5 ring-1 ring-primary-container/20",
       )}
     >
       <div className="flex justify-between items-start">

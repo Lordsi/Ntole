@@ -150,22 +150,20 @@ export function DriverHome({
 
   const mapLayer = (
     <div className="absolute inset-0">
-      <RideMap className="h-full w-full opacity-80" />
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(18,20,20,0.75) 0%, rgba(18,20,20,0.92) 100%)",
-        }}
-      />
+      <RideMap className="h-full w-full" />
+      <div className="absolute inset-0 map-gradient-overlay lg:hidden pointer-events-none" />
+      <div className="absolute inset-0 map-edge-vignette hidden lg:block pointer-events-none" />
     </div>
   );
 
   return (
     <DriverShell profile={profile} layout="map-first" mapSlot={mapLayer}>
         <div className="flex flex-col gap-lg mt-sm">
-          {/* Status Card */}
-          <section className="glass-panel rounded-lg p-lg flex flex-col gap-lg">
+          <p className="hidden lg:block font-label-sm text-label-sm text-primary-container/90 uppercase tracking-[0.2em]">
+            Driver console
+          </p>
+
+          <section className="glass-panel rounded-xl p-lg flex flex-col gap-lg lg:gap-md">
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="font-headline-md text-headline-md text-primary">
@@ -189,40 +187,48 @@ export function DriverHome({
               <TierBadge tier={vehicle ? tierById.get(vehicle.tier_id) : undefined} />
             </div>
 
-            {/* Massive GO ONLINE / ONLINE button */}
-            <div className="flex flex-col items-center justify-center py-xl">
+            <div className="flex flex-col items-center justify-center py-xl lg:py-md lg:flex-row lg:justify-between lg:items-center lg:gap-lg">
               <button
                 type="button"
                 disabled={busy}
                 onClick={toggleOnline}
                 className={cn(
-                  "w-48 h-48 rounded-full flex flex-col items-center justify-center gap-xs transition-all duration-300 active:scale-95 disabled:opacity-60",
+                  "rounded-full flex flex-col items-center justify-center gap-xs transition-all duration-300 active:scale-95 disabled:opacity-60",
+                  "w-48 h-48 lg:w-28 lg:h-28 lg:shrink-0",
                   online
-                    ? "bg-primary-container text-on-primary-container shadow-[0_0_24px_rgba(57,255,20,0.35)]"
+                    ? "bg-primary-container text-on-primary-container shadow-[0_0_20px_rgba(57,255,20,0.3)]"
                     : "bg-surface-container-highest text-on-surface border border-outline-variant/30",
                 )}
               >
                 <MaterialIcon
                   name="power_settings_new"
                   filled
-                  className="text-5xl font-black"
+                  className="text-5xl lg:text-3xl font-black"
                 />
-                <span className="font-display-lg text-headline-lg-mobile uppercase tracking-tighter">
+                <span className="font-display-lg text-headline-lg-mobile lg:hidden uppercase tracking-tighter">
                   {online ? "Online" : "Go Online"}
                 </span>
               </button>
-              <p
-                className={cn(
-                  "mt-lg font-label-md text-label-md text-on-surface-variant",
-                  online && "animate-pulse",
-                )}
-              >
-                {online
-                  ? incoming.length === 0
-                    ? "Waiting for ride requests…"
-                    : `${incoming.length} request${incoming.length === 1 ? "" : "s"} nearby`
-                  : "Tap to start receiving requests"}
-              </p>
+              <div className="lg:flex-1 lg:text-left text-center">
+                <p className="font-headline-md text-headline-md text-on-surface hidden lg:block">
+                  {online ? "You’re online" : "You’re offline"}
+                </p>
+                <p
+                  className={cn(
+                    "mt-lg lg:mt-xs font-label-md text-label-md text-on-surface-variant",
+                    online && "lg:animate-none animate-pulse",
+                  )}
+                >
+                  {online
+                    ? incoming.length === 0
+                      ? "Waiting for ride requests…"
+                      : `${incoming.length} request${incoming.length === 1 ? "" : "s"} nearby`
+                    : "Go online to receive requests"}
+                </p>
+                <p className="hidden lg:block mt-sm font-label-sm text-label-sm text-primary-container">
+                  Today: {formatMoney(dailyEarningsMinor, dailyEarningsCurrency)}
+                </p>
+              </div>
             </div>
           </section>
 

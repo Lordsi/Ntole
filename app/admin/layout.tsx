@@ -19,10 +19,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       {/* Main content: full-width on mobile (sidebar is a drawer), shifted
           right by the persistent sidebar on md+. Top padding on mobile leaves
           room for the fixed mobile top app bar (h-14). */}
-      <main className="md:ml-64 px-md md:px-lg pt-[4.5rem] md:pt-lg pb-xl min-h-screen">
-        {/* Desktop-only utility chrome — notifications + admin profile pill.
-            On mobile these live in the top app bar inside <AdminSidebar />. */}
-        <header className="hidden md:flex justify-end items-center gap-md mb-lg">
+      <main className="md:ml-64 px-md md:px-xl pt-[4.5rem] md:pt-xl pb-xl min-h-screen">
+        <div className="mx-auto max-w-[1400px]">
+        <header className="hidden md:flex justify-end items-center gap-md mb-xl">
           <button
             type="button"
             aria-label="Notifications"
@@ -50,6 +49,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </header>
 
         {children}
+        </div>
       </main>
     </div>
   );

@@ -73,19 +73,18 @@ export function RiderRideView({
     ride.status === "requested" || ride.status === "accepted";
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden font-body-md text-on-surface">
-      {/* Background Map Layer */}
-      <div className="absolute inset-0 z-0">
+    <div className="fixed inset-0 z-0 overflow-hidden font-body-md text-on-surface lg:flex">
+      <div className="absolute inset-0 z-0 lg:flex-1">
         <RideMap
           pickup={pickup}
           drop={drop}
           driver={driverCoords}
           className="h-full w-full"
         />
+        <div className="absolute inset-0 map-edge-vignette hidden lg:block pointer-events-none" />
       </div>
 
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 lg:right-[420px] z-50 px-margin-mobile py-md flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 px-margin-mobile py-md flex justify-between items-center bg-gradient-to-b from-background/80 to-transparent backdrop-blur-sm lg:hidden">
         <Link
           href="/rider"
           className="w-12 h-12 flex items-center justify-center rounded-full bg-surface-container-high/80 backdrop-blur-md border border-white/10 active:scale-95 transition-transform"
@@ -109,8 +108,8 @@ export function RiderRideView({
         />
       )}
 
-      {/* Bottom panel switches based on ride status. */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:left-auto lg:right-0 lg:w-[420px] lg:max-w-[min(420px,100%)]">
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:static lg:flex lg:items-end lg:justify-center lg:p-6 lg:w-[440px] lg:shrink-0 lg:z-10">
+        <div className="w-full lg:desktop-float-card lg:overflow-hidden lg:rounded-2xl">
         {ride.status === "requested" && (
           <WaitingForMatchPanel
             ride={ride}
@@ -138,6 +137,7 @@ export function RiderRideView({
           <CompletedRidePanel ride={ride} tier={tier} riderId={riderId} />
         )}
         {ride.status === "cancelled" && <CancelledRidePanel ride={ride} />}
+        </div>
       </div>
     </div>
   );
@@ -156,7 +156,7 @@ function FloatingRouteSummary({
   dropAddress?: string | null;
 }) {
   return (
-    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px] lg:left-[calc(50%-210px)]">
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-40px)] max-w-[400px] lg:left-auto lg:right-[calc(440px+2rem)] lg:translate-x-0 lg:top-8">
       <div className="glass-card rounded-lg p-md flex items-center gap-md">
         <div className="flex flex-col items-center gap-xs">
           <div className="w-2 h-2 rounded-full bg-outline" />

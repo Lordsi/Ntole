@@ -161,26 +161,31 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
       <RideMap
         pickup={pickup ? { lat: pickup.lat, lng: pickup.lng } : null}
         drop={drop ? { lat: drop.lat, lng: drop.lng } : null}
-        className="h-full w-full opacity-90"
+        className="h-full w-full"
       />
-      <div className="absolute inset-0 map-gradient-overlay pointer-events-none" />
+      <div className="absolute inset-0 map-gradient-overlay lg:hidden pointer-events-none" />
+      <div className="absolute inset-0 map-edge-vignette hidden lg:block pointer-events-none" />
     </div>
   );
 
   return (
     <RiderShell profile={profile} layout="map-first" mapSlot={mapLayer}>
-        {/* Hero Section */}
-        <section className="mb-xl">
-          <h2 className="font-display-lg text-[40px] lg:text-display-lg leading-tight text-primary font-extrabold tracking-tight max-w-[280px] lg:max-w-none">
-            Where do you want to go?
+        <section className="mb-lg lg:mb-xl">
+          <p className="hidden lg:block font-label-sm text-label-sm text-primary-container/90 uppercase tracking-[0.2em] mb-sm">
+            Book a ride
+          </p>
+          <h2 className="font-display-lg text-[36px] sm:text-[40px] lg:text-[32px] xl:text-display-lg leading-[1.1] text-primary font-extrabold tracking-tight">
+            Where to?
           </h2>
+          <p className="hidden lg:block mt-sm font-body-md text-body-md text-on-surface-variant max-w-[32ch]">
+            Pickup and destination update the map live. Choose a tier, then
+            request your driver.
+          </p>
         </section>
 
-        {/* Main Interaction Hub */}
         <div className="flex flex-col gap-lg flex-grow">
-          {/* Ride/Package Toggle */}
-          <div className="flex justify-center">
-            <div className="bg-surface-container-highest p-xs rounded-full flex w-full max-w-[320px]">
+          <div className="flex justify-center lg:justify-start">
+            <div className="bg-surface-container-highest/80 p-xs rounded-full flex w-full max-w-[320px] lg:max-w-[280px]">
               <button
                 type="button"
                 onClick={() => setMode("driver")}
@@ -233,7 +238,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
                 </span>
               )}
             </div>
-            <div className="flex gap-md overflow-x-auto pb-md no-scrollbar snap-x">
+            <div className="flex gap-md overflow-x-auto pb-md no-scrollbar snap-x lg:grid lg:grid-cols-3 lg:gap-sm lg:overflow-visible lg:pb-0 lg:snap-none">
               {tiers.map((tier) => (
                 <TierCard
                   key={tier.id}
@@ -269,8 +274,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
           />
         </div>
 
-        {/* Desktop: CTA lives inside the side panel */}
-        <div className="hidden lg:block mt-lg">
+        <div className="hidden lg:block sticky bottom-0 pt-md pb-xs bg-gradient-to-t from-[rgba(22,24,24,0.98)] to-transparent -mx-xl px-xl">
           <RequestRideButton
             label={requestLabel}
             disabled={!canRequest || requesting}
