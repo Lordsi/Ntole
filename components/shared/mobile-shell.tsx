@@ -13,6 +13,7 @@ import {
   type NotificationItem,
 } from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
+import { useScrolled } from "@/lib/utils/use-scrolled";
 
 export interface MobileShellNavItem {
   href: string;
@@ -198,14 +199,19 @@ function BottomNav({
   pathname: string;
   mapFirst: boolean;
 }) {
+  // Auto-hide once the user scrolls so the map / page content gets the
+  // full canvas. Reappears on scroll-to-top.
+  const scrolled = useScrolled(80);
   return (
     <nav
       className={cn(
-        "lg:hidden fixed bottom-0 inset-x-0 z-50",
+        "lg:hidden fixed bottom-0 inset-x-0 z-50 transition-transform duration-300 ease-out",
         "bg-background/90 backdrop-blur-2xl border-t border-white/5 rounded-t-lg",
         "flex justify-around items-center h-20 pb-safe px-gutter",
+        scrolled && "translate-y-full",
         !mapFirst && cn("mx-auto w-full", PHONE_MAX),
       )}
+      aria-hidden={scrolled}
     >
       {items.map((it) => {
         const active =

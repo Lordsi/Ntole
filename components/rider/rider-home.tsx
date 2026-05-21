@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/shared/error-boundary";
 import type { NotificationItem } from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 import { useGeolocation } from "@/lib/maps/use-geolocation";
+import { useScrolled } from "@/lib/utils/use-scrolled";
 
 import { LocationStack } from "./location-stack";
 import { TierCard } from "./tier-card";
@@ -75,6 +76,7 @@ function RiderHomeInner({
   // Ask for the user's location once at mount. The hook itself triggers the
   // browser permission prompt; gracefully ignored if denied.
   const geo = useGeolocation({ enabled: !pickup });
+  const scrolled = useScrolled(80);
 
   // Restore in-progress form after a sign-in round-trip.
   useEffect(() => {
@@ -487,9 +489,50 @@ function RiderHomeInner({
           <div aria-hidden className="h-20 lg:hidden" />
         </div>
 
-        {/* Mobile: sticky CTA above bottom nav (Stitch mock) */}
-        <div className="lg:hidden fixed bottom-20 inset-x-0 z-40 px-margin-mobile py-lg pointer-events-none">
+        {/* Mobile sticky CTA. Two layouts cross-fade: a wide pill at the
+            top of the scroll, and a circular car FAB once the user has
+            scrolled. The wide pill sits above the bottom nav (bottom-20);
+            the FAB sits in the bottom-right corner where the nav used to
+            be, which is fine because the bottom nav also hides on scroll. */}
+        <div
+          className={cn(
+            "lg:hidden fixed inset-x-0 z-40 px-margin-mobile py-lg pointer-events-none transition-all duration-300 ease-out",
+            scrolled
+              ? "bottom-4 opacity-0 translate-y-2 pointer-events-none"
+              : "bottom-20 opacity-100 translate-y-0",
+          )}
+          aria-hidden={scrolled}
+        >
           {requestButton}
+        </div>
+        <div
+          className={cn(
+            "lg:hidden fixed right-margin-mobile z-40 transition-all duration-300 ease-out",
+            scrolled
+              ? "bottom-6 opacity-100 scale-100 pointer-events-auto"
+              : "bottom-20 opacity-0 scale-75 pointer-events-none",
+          )}
+          aria-hidden={!scrolled}
+        >
+          <button
+            type="button"
+            disabled={!canRequest || requesting}
+            onClick={requestRide}
+            aria-label={requestLabel}
+            title={requestLabel}
+            className={cn(
+              "grid h-14 w-14 place-items-center rounded-full transition-all duration-200 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
+              canRequest && !requesting
+                ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.45)] neon-glow-primary"
+                : "bg-surface-container-highest/90 text-on-surface-variant backdrop-blur",
+            )}
+          >
+            <MaterialIcon
+              name="directions_car"
+              filled={canRequest && !requesting}
+              className="text-[28px]"
+            />
+          </button>
         </div>
     </RiderShell>
   );
