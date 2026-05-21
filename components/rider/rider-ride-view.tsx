@@ -135,6 +135,18 @@ export function RiderRideView({
         </Link>
       </header>
 
+      {/* Always-visible floating minimize. Pinned top-right of the
+          viewport on every breakpoint so the rider can never get
+          trapped on the trip map. */}
+      <Link
+        href="/rider"
+        aria-label="Exit trip map"
+        title="Exit"
+        className="hidden lg:inline-flex fixed top-4 right-4 z-[60] h-12 w-12 items-center justify-center rounded-full bg-surface text-on-surface ring-2 ring-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.6)] hover:bg-surface-container-high active:scale-95 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2"
+      >
+        <MaterialIcon name="close" className="text-[22px]" />
+      </Link>
+
       {/* Top summary glass card — only while waiting / accepted. */}
       {showFloatingRouteSummary && (
         <FloatingRouteSummary

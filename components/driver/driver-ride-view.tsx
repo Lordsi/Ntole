@@ -157,19 +157,19 @@ export function DriverRideView({
         className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background/85 via-background/40 to-transparent"
       />
 
-      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-sm px-margin-mobile py-md">
+      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-sm px-margin-mobile py-md">
         <Link
           href="/driver"
-          aria-label="Exit map and return to dashboard"
-          title="Exit to dashboard"
-          className="inline-flex h-11 items-center gap-xs rounded-full bg-surface/80 backdrop-blur-md px-md text-on-surface-variant hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 ring-1 ring-white/10 transition-colors"
+          aria-label="Minimize map and return to dashboard"
+          title="Minimize"
+          className="inline-flex h-11 items-center gap-xs rounded-full bg-surface/95 backdrop-blur-md px-md text-on-surface hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 ring-1 ring-white/15 shadow-[0_6px_24px_rgba(0,0,0,0.55)] transition-colors"
         >
-          <MaterialIcon name="close" className="text-[20px]" />
+          <MaterialIcon name="close_fullscreen" className="text-[20px]" />
           <span className="font-label-sm text-label-sm font-bold uppercase tracking-[0.08em]">
-            Exit
+            Minimize
           </span>
         </Link>
-        <span className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-md text-label-sm font-label-sm uppercase tracking-[0.12em] text-on-surface ring-1 ring-white/10">
+        <span className="px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-md text-label-sm font-label-sm uppercase tracking-[0.12em] text-on-surface ring-1 ring-white/15 shadow-[0_6px_24px_rgba(0,0,0,0.45)]">
           {statusLabel}
         </span>
         {canCancel ? (
@@ -177,7 +177,7 @@ export function DriverRideView({
             type="button"
             onClick={() => setCancelOpen(true)}
             aria-label="Cancel ride"
-            className="inline-flex h-11 items-center gap-xs rounded-full bg-error/15 backdrop-blur-md px-md text-error hover:bg-error/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-error focus-visible:outline-offset-2 ring-1 ring-error/40 transition-colors"
+            className="inline-flex h-11 items-center gap-xs rounded-full bg-error/20 backdrop-blur-md px-md text-error hover:bg-error/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-error focus-visible:outline-offset-2 ring-1 ring-error/50 shadow-[0_6px_24px_rgba(0,0,0,0.55)] transition-colors"
           >
             <MaterialIcon name="report" filled className="text-[20px]" />
             <span className="font-label-sm text-label-sm font-bold uppercase tracking-[0.08em]">
@@ -188,6 +188,22 @@ export function DriverRideView({
           <div className="w-11" />
         )}
       </header>
+
+      {/*
+        Belt-and-braces floating minimize button. Pinned to the
+        top-right corner of the viewport with high z-index so it sits
+        above the map, the header, and any glass panels. This is the
+        guaranteed "get me out of here" affordance: a big square
+        button that never moves and is always one tap away.
+      */}
+      <Link
+        href="/driver"
+        aria-label="Exit trip map"
+        title="Exit"
+        className="fixed top-4 right-4 z-50 inline-flex h-12 w-12 items-center justify-center rounded-full bg-surface text-on-surface ring-2 ring-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.6)] hover:bg-surface-container-high active:scale-95 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2"
+      >
+        <MaterialIcon name="close" className="text-[22px]" />
+      </Link>
 
       {/* Bottom panel container */}
       <div className="absolute inset-x-0 bottom-0 z-20 p-margin-mobile">

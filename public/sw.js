@@ -6,7 +6,7 @@
 // connected client throws away its old shell cache on the next page load.
 // Without this, the SW can keep serving the previous HTML/JS even after
 // the new build is on the server.
-const VERSION = "ntole-v3-2026-05-21";
+const VERSION = "ntole-v4-2026-05-21";
 const SHELL_URLS = ["/", "/login", "/manifest.webmanifest", "/icons/icon-192.svg", "/icons/icon-512.svg"];
 
 self.addEventListener("install", (event) => {
