@@ -7,17 +7,22 @@ import { useRouter } from "next/navigation";
 import { RideMap } from "@/components/map";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { RiderShell } from "@/components/shared/role-shell";
+import type { NotificationItem } from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
+import { useGeolocation } from "@/lib/maps/use-geolocation";
 
 import { LocationStack } from "./location-stack";
 import { TierCard } from "./tier-card";
 
-import type { Profile, RideTier } from "@/lib/supabase/types";
+import type { Profile, Ride, RideTier } from "@/lib/supabase/types";
 import type { PlaceSuggestion } from "@/lib/maps/types";
 
 interface RiderHomeProps {
   profile: Profile | null;
   tiers: RideTier[];
+  /** Last few completed trips — power the "Recent" quick-chips. */
+  recentTrips?: Pick<Ride, "id" | "drop_address" | "drop_lat" | "drop_lng">[];
+  notifications?: NotificationItem[];
 }
 
 interface QuoteRow {
@@ -34,7 +39,12 @@ interface PendingRide {
   selectedTierId: string;
 }
 
-export function RiderHome({ profile, tiers }: RiderHomeProps) {
+export function RiderHome({
+  profile,
+  tiers,
+  recentTrips = [],
+  notifications,
+}: RiderHomeProps) {
   const router = useRouter();
   const isAuthed = profile !== null;
 
@@ -50,6 +60,12 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoFillingPickup, setAutoFillingPickup] = useState(false);
+  const [city, setCity] = useState<string | null>(null);
+
+  // Ask for the user's location once at mount. The hook itself triggers the
+  // browser permission prompt; gracefully ignored if denied.
+  const geo = useGeolocation({ enabled: !pickup });
 
   // Restore in-progress form after a sign-in round-trip.
   useEffect(() => {
@@ -67,6 +83,37 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
     }
     window.sessionStorage.removeItem(PENDING_RIDE_STORAGE_KEY);
   }, [isAuthed]);
+
+  // Reverse-geocode the GPS fix into a real address and auto-fill pickup.
+  useEffect(() => {
+    if (geo.status !== "ready" || pickup) return;
+    const { coords } = geo;
+    let cancelled = false;
+    setAutoFillingPickup(true);
+    fetch(`/api/geocode/reverse?lat=${coords.lat}&lng=${coords.lng}`)
+      .then((r) => r.json())
+      .then((data: { result: PlaceSuggestion | null }) => {
+        if (cancelled) return;
+        if (data.result) {
+          setPickup(data.result);
+          setCity(extractCity(data.result.label));
+        } else {
+          // Even without a label, seed pickup with raw coords so the user
+          // can immediately get a quote.
+          setPickup({
+            label: `My location · ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`,
+            address: `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`,
+            lat: coords.lat,
+            lng: coords.lng,
+          });
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => !cancelled && setAutoFillingPickup(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [geo, pickup]);
 
   useEffect(() => {
     if (!pickup || !drop) {
@@ -157,17 +204,72 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
         ? "Request Ride"
         : "Send Package";
 
+  const userCoords = geo.status === "ready" ? geo.coords : null;
   const mapLayer = (
     <div className="absolute inset-0">
       <RideMap
         pickup={pickup ? { lat: pickup.lat, lng: pickup.lng } : null}
         drop={drop ? { lat: drop.lat, lng: drop.lng } : null}
+        recenterTo={!pickup && !drop ? userCoords : null}
         className="h-full w-full"
       />
       <div className="absolute inset-0 map-gradient-overlay lg:hidden pointer-events-none" />
       <div className="absolute inset-0 map-edge-vignette hidden lg:block pointer-events-none" />
     </div>
   );
+
+  // Quick-pick chips: saved home + recent unique destinations.
+  const quickChips = (() => {
+    const seen = new Set<string>();
+    const list: {
+      id: string;
+      icon: string;
+      label: string;
+      place: PlaceSuggestion;
+    }[] = [];
+    if (profile?.home_lat != null && profile?.home_lng != null && profile.home_address) {
+      list.push({
+        id: "home",
+        icon: "home",
+        label: "Home",
+        place: {
+          label: profile.home_address,
+          address: profile.home_address,
+          lat: profile.home_lat,
+          lng: profile.home_lng,
+        },
+      });
+      seen.add(profile.home_address);
+    }
+    for (const t of recentTrips) {
+      if (!t.drop_address || seen.has(t.drop_address)) continue;
+      seen.add(t.drop_address);
+      list.push({
+        id: `recent-${t.id}`,
+        icon: "history",
+        label: shortLabel(t.drop_address),
+        place: {
+          label: t.drop_address,
+          address: t.drop_address,
+          lat: t.drop_lat,
+          lng: t.drop_lng,
+        },
+      });
+      if (list.length >= 5) break;
+    }
+    return list;
+  })();
+
+  const geoStatusLabel = (() => {
+    if (autoFillingPickup) return "Locating you…";
+    if (geo.status === "loading") return "Detecting your location…";
+    if (geo.status === "ready" && city) return city;
+    if (geo.status === "ready") return "Location detected";
+    if (geo.status === "denied") return "Location off · type pickup manually";
+    if (geo.status === "unavailable" || geo.status === "error")
+      return "Location unavailable";
+    return null;
+  })();
 
   const requestButton = (
     <RequestRideButton
@@ -186,14 +288,30 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
       footer={
         <div className="hidden lg:block">{requestButton}</div>
       }
+      notifications={notifications}
     >
-        <section className="mb-lg lg:mb-md">
-          <p className="hidden lg:block font-label-sm text-label-sm text-primary-container/90 uppercase tracking-[0.2em] mb-sm">
-            Book a ride
-          </p>
+        <section className="mb-lg lg:mb-md flex flex-col gap-sm">
+          <Greeting name={profile?.full_name ?? null} />
           <h2 className="font-display-lg text-[36px] sm:text-[40px] lg:text-[32px] xl:text-display-lg leading-[1.1] text-primary font-extrabold tracking-tight">
-            Where to?
+            Where to{profile?.full_name ? `, ${firstName(profile.full_name)}` : ""}?
           </h2>
+          {geoStatusLabel && (
+            <div className="inline-flex w-fit items-center gap-xs glass-panel rounded-full px-md py-xs">
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  geo.status === "ready"
+                    ? "bg-primary-container neon-glow-primary animate-pulse-soft"
+                    : geo.status === "loading"
+                      ? "bg-primary-container/60 animate-pulse-soft"
+                      : "bg-on-surface-variant/60",
+                )}
+              />
+              <span className="font-label-sm text-label-sm text-on-surface line-clamp-1">
+                {geoStatusLabel}
+              </span>
+            </div>
+          )}
           <p className="hidden lg:block mt-sm font-body-md text-body-md text-on-surface-variant max-w-[32ch]">
             Pickup and destination update the map live. Choose a tier, then
             request your driver.
@@ -229,6 +347,45 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
               </button>
             </div>
           </div>
+
+          {/* Quick chips — saved home + recent destinations */}
+          {quickChips.length > 0 && (
+            <section
+              className="flex gap-sm overflow-x-auto no-scrollbar -mx-margin-mobile px-margin-mobile lg:mx-0 lg:px-0 lg:flex-wrap"
+              aria-label="Saved destinations"
+            >
+              {quickChips.map((c) => {
+                const active = drop?.label === c.place.label;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setDrop(c.place)}
+                    className={cn(
+                      "shrink-0 inline-flex items-center gap-xs rounded-full pl-sm pr-md py-xs transition-all active:scale-95 backdrop-blur",
+                      active
+                        ? "bg-primary-container text-on-primary-container shadow-glow"
+                        : "bg-surface-container-highest/80 text-on-surface hover:bg-surface-container-high",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "grid h-7 w-7 place-items-center rounded-full",
+                        active
+                          ? "bg-on-primary-container/10 text-on-primary-container"
+                          : "bg-primary-container/10 text-primary-container",
+                      )}
+                    >
+                      <MaterialIcon name={c.icon} className="text-[16px]" />
+                    </span>
+                    <span className="font-label-md text-label-md font-bold">
+                      {c.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </section>
+          )}
 
           {/* LocationStack Card */}
           <LocationStack
@@ -316,5 +473,47 @@ function RequestRideButton({
       {label}
     </button>
   );
+}
+
+function Greeting({ name }: { name: string | null }) {
+  // Compute on the client to avoid SSR/CSR hydration mismatch from `new Date()`.
+  const [g, setG] = useState<string | null>(null);
+  useEffect(() => {
+    const h = new Date().getHours();
+    setG(
+      h < 5
+        ? "Working late"
+        : h < 12
+          ? "Good morning"
+          : h < 17
+            ? "Good afternoon"
+            : h < 22
+              ? "Good evening"
+              : "Good night",
+    );
+  }, []);
+  if (!g) return null;
+  const display = name ? `${g}, ${firstName(name)}` : g;
+  return (
+    <span className="font-label-md text-label-md uppercase tracking-[0.16em] text-primary-container/90">
+      {display}
+    </span>
+  );
+}
+
+function firstName(full: string) {
+  return full.split(" ")[0] ?? full;
+}
+
+/** Trim long addresses to a chip-friendly label (first comma-separated part). */
+function shortLabel(addr: string) {
+  const first = addr.split(",")[0]?.trim() ?? addr;
+  return first.length > 24 ? `${first.slice(0, 22)}…` : first;
+}
+
+/** Pick something city-ish out of a Nominatim display name. */
+function extractCity(label: string): string | null {
+  const parts = label.split(",").map((p) => p.trim()).filter(Boolean);
+  return parts[2] ?? parts[1] ?? parts[0] ?? null;
 }
 

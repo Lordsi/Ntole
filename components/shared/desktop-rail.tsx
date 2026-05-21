@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import {
+  NotificationsButton,
+  type NotificationItem,
+} from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 
 import type { MobileShellNavItem } from "@/components/shared/mobile-shell";
@@ -18,6 +22,7 @@ interface DesktopRailProps {
   topRight?: React.ReactNode;
   /** Accent wordmark tint — driver uses neon, rider neutral */
   variant?: "rider" | "driver";
+  notifications?: NotificationItem[];
 }
 
 /**
@@ -31,6 +36,7 @@ export function DesktopRail({
   avatarSrc,
   topRight,
   variant = "rider",
+  notifications,
 }: DesktopRailProps) {
   const pathname = usePathname();
 
@@ -97,17 +103,7 @@ export function DesktopRail({
       <div className="mt-auto border-t border-outline-variant/30 p-md space-y-sm">
         <ThemeToggle compact className="w-full justify-center" />
 
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="flex w-full items-center gap-md rounded-xl px-md py-sm text-on-surface-variant hover:bg-white/[0.04] hover:text-on-surface transition-colors"
-        >
-          <span className="relative grid h-9 w-9 place-items-center rounded-lg bg-white/[0.04]">
-            <MaterialIcon name="notifications" className="text-[20px]" />
-            <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary-container" />
-          </span>
-          <span className="font-label-md text-label-md">Notifications</span>
-        </button>
+        <NotificationsButton items={notifications} tone="rail" />
 
         {topRight ?? (
           <Link

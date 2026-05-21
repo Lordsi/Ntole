@@ -6,6 +6,7 @@ import {
   MobileShell,
   type MobileShellNavItem,
 } from "@/components/shared/mobile-shell";
+import type { NotificationItem } from "@/components/shared/notifications-button";
 import type { Profile } from "@/lib/supabase/types";
 
 /**
@@ -34,6 +35,7 @@ interface ShellProps {
   layout?: MobileShellLayout;
   mapSlot?: React.ReactNode;
   footer?: React.ReactNode;
+  notifications?: NotificationItem[];
 }
 
 /**
@@ -47,6 +49,7 @@ export function RiderShell({
   layout,
   mapSlot,
   footer,
+  notifications,
 }: ShellProps) {
   const topRight = !profile ? (
     <Link
@@ -67,6 +70,7 @@ export function RiderShell({
       layout={layout}
       mapSlot={mapSlot}
       footer={footer}
+      notifications={notifications}
     >
       {children}
     </MobileShell>
@@ -80,6 +84,7 @@ export function DriverShell({
   layout,
   mapSlot,
   footer,
+  notifications,
 }: ShellProps) {
   return (
     <MobileShell
@@ -91,6 +96,7 @@ export function DriverShell({
       layout={layout}
       mapSlot={mapSlot}
       footer={footer}
+      notifications={notifications}
     >
       {children}
     </MobileShell>

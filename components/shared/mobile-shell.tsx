@@ -8,6 +8,10 @@ import { MaterialIcon } from "@/components/ui/material-icon";
 import { DesktopRail } from "@/components/shared/desktop-rail";
 import { StitchMapBackdrop } from "@/components/shared/stitch-map-backdrop";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import {
+  NotificationsButton,
+  type NotificationItem,
+} from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 
 export interface MobileShellNavItem {
@@ -31,6 +35,8 @@ interface MobileShellProps {
   mapSlot?: React.ReactNode;
   /** Pinned below scroll area on desktop map-first layout (e.g. primary CTA). */
   footer?: React.ReactNode;
+  /** Items rendered inside the bell sheet. Empty array → empty state. */
+  notifications?: NotificationItem[];
   children: React.ReactNode;
 }
 
@@ -49,6 +55,7 @@ export function MobileShell({
   layout = "content",
   mapSlot,
   footer,
+  notifications,
   children,
 }: MobileShellProps) {
   const pathname = usePathname();
@@ -65,6 +72,7 @@ export function MobileShell({
           avatarSrc={avatarSrc}
           topRight={topRight}
           variant={topBarVariant}
+          notifications={notifications}
         />
 
         {mapFirst ? (
@@ -122,6 +130,7 @@ export function MobileShell({
           avatarName={avatarName}
           avatarSrc={avatarSrc}
           topRight={topRight}
+          notifications={notifications}
         />
 
         <main
@@ -145,34 +154,29 @@ function MobileTopBar({
   avatarName,
   avatarSrc,
   topRight,
+  notifications,
 }: {
   profileHref: string;
   avatarName?: string;
   avatarSrc?: string | null;
   topRight?: React.ReactNode;
+  notifications?: NotificationItem[];
 }) {
   return (
     <header className="lg:hidden fixed top-0 inset-x-0 z-50 flex justify-between items-center px-margin-mobile py-md bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
-      <button
-        type="button"
+      <Link
+        href={profileHref}
         aria-label="Menu"
         className="grid h-11 w-11 place-items-center rounded-full text-on-surface-variant hover:bg-white/5"
       >
         <MaterialIcon name="menu" />
-      </button>
+      </Link>
       <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary-container tracking-tighter">
         Ntole
       </h1>
       <div className="flex items-center gap-xs">
         <ThemeToggle compact />
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative grid h-11 w-11 place-items-center rounded-full text-on-surface-variant"
-        >
-          <MaterialIcon name="notifications" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-container rounded-full" />
-        </button>
+        <NotificationsButton items={notifications} />
         {topRight ?? (
           <Link
             href={profileHref}

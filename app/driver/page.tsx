@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth/session";
 import { DriverHome } from "@/components/driver/driver-home";
+import { buildUserNotifications } from "@/lib/notifications/user";
 import type { Driver, RideTier, Vehicle } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +13,14 @@ export default async function DriverHomePage() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
-  const [driverRes, vehicleRes, tiersRes, activeRideRes, todayRidesRes] =
-    await Promise.all([
+  const [
+    driverRes,
+    vehicleRes,
+    tiersRes,
+    activeRideRes,
+    todayRidesRes,
+    notifications,
+  ] = await Promise.all([
     supabase
       .from("drivers")
       .select("*")
@@ -41,6 +48,7 @@ export default async function DriverHomePage() {
       .eq("driver_id", profile!.id)
       .eq("status", "completed")
       .gte("completed_at", startOfDay.toISOString()),
+    buildUserNotifications(supabase, profile!.id, "driver"),
   ]);
 
   const todayRides = todayRidesRes.data ?? [];
@@ -60,6 +68,7 @@ export default async function DriverHomePage() {
       activeRideDrop={activeRideRes.data?.drop_address ?? null}
       dailyEarningsMinor={dailyEarningsMinor}
       dailyEarningsCurrency={dailyEarningsCurrency}
+      notifications={notifications}
     />
   );
 }

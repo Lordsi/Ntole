@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { RideMap } from "@/components/map";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { DriverShell } from "@/components/shared/role-shell";
+import type { NotificationItem } from "@/components/shared/notifications-button";
 import { cn } from "@/lib/utils/cn";
 import { formatDistance, formatDuration, formatMoney } from "@/lib/utils/format";
 
@@ -29,6 +30,7 @@ interface DriverHomeProps {
   activeRideDrop?: string | null;
   dailyEarningsMinor: number;
   dailyEarningsCurrency: string;
+  notifications?: NotificationItem[];
 }
 
 export function DriverHome({
@@ -40,6 +42,7 @@ export function DriverHome({
   activeRideDrop,
   dailyEarningsMinor,
   dailyEarningsCurrency,
+  notifications,
 }: DriverHomeProps) {
   const router = useRouter();
   const canGoOnline =
@@ -165,7 +168,12 @@ export function DriverHome({
   );
 
   return (
-    <DriverShell profile={profile} layout="map-first" mapSlot={mapLayer}>
+    <DriverShell
+      profile={profile}
+      layout="map-first"
+      mapSlot={mapLayer}
+      notifications={notifications}
+    >
         <div className="flex flex-col gap-lg mt-sm">
           <p className="hidden lg:block font-label-sm text-label-sm text-primary-container/90 uppercase tracking-[0.2em]">
             Driver console

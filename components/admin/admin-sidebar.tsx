@@ -9,6 +9,10 @@ import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils/cn";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import {
+  NotificationsButton,
+  type NotificationItem,
+} from "@/components/shared/notifications-button";
 
 interface SidebarItem {
   href: string;
@@ -29,6 +33,7 @@ interface AdminSidebarProps {
   /** Used to render the mobile top app bar's admin pill. */
   adminName?: string | null;
   adminAvatarUrl?: string | null;
+  notifications?: NotificationItem[];
 }
 
 /**
@@ -41,7 +46,11 @@ interface AdminSidebarProps {
  * collocated with the navigation it controls. The drawer auto-closes when
  * the route changes so tapping a nav item dismisses it.
  */
-export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
+export function AdminSidebar({
+  adminName,
+  adminAvatarUrl,
+  notifications,
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -91,13 +100,7 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
         </div>
         <div className="flex items-center gap-xs">
           <ThemeToggle compact />
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="p-sm rounded-md text-primary-container hover:bg-white/10 active:bg-white/15 transition-colors"
-          >
-            <MaterialIcon name="notifications" />
-          </button>
+          <NotificationsButton items={notifications} />
           <Link
             href="/admin/profile"
             aria-label="My profile"
