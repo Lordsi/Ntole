@@ -1,22 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { InstallPrompt } from "@/components/shared/install-prompt";
 import { ServiceWorkerRegister } from "@/components/shared/sw-register";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 
-const geist = Geist({
+/**
+ * Single sans family across the whole product. Plus Jakarta Sans has a
+ * confident humanist grotesque feel that reads premium without leaning
+ * into either generic system-UI or coder-y monospace territory. We use it
+ * for display, body, and labels — `--font-mono` aliases the same family
+ * so any pre-existing `font-label-*` utilities keep working.
+ */
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-geist",
-  weight: ["400", "500", "600", "700"],
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-mono",
-  weight: ["400", "500", "600"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -67,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${jetbrains.variable}`}
+      className={jakarta.variable}
       suppressHydrationWarning
     >
       <head>

@@ -177,7 +177,7 @@ export function LoginForm() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Glass field with leading Material Symbol + JetBrains Mono label    */
+/* Glass field with leading Material Symbol + tracked uppercase label */
 /* ------------------------------------------------------------------ */
 
 interface FieldProps extends React.InputHTMLAttributes<HTMLInputElement> {

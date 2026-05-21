@@ -125,9 +125,11 @@
   @apply font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-on-surface-variant;
 }
 
-/* Data-only mono (prices, plates, ETAs) */
+/* Data-only mono (prices, plates, ETAs). We dropped the loaded mono font
+   from the bundle — the same sans handles labels now. The system mono
+   stack is reserved for true tabular data where columns need to align. */
 .font-data {
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }

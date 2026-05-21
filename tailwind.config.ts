@@ -54,15 +54,17 @@ export default {
       },
 
       fontFamily: {
-        sans: ["var(--font-geist)", "system-ui", "sans-serif"],
-        "display-lg": ["var(--font-geist)", "sans-serif"],
-        "headline-lg": ["var(--font-geist)", "sans-serif"],
-        "headline-lg-mobile": ["var(--font-geist)", "sans-serif"],
-        "headline-md": ["var(--font-geist)", "sans-serif"],
-        "body-lg": ["var(--font-geist)", "sans-serif"],
-        "body-md": ["var(--font-geist)", "sans-serif"],
-        "label-md": ["var(--font-mono)", "monospace"],
-        "label-sm": ["var(--font-mono)", "monospace"],
+        // Single family for the whole product (display, body, labels).
+        // Drops the monospace label treatment that read as coder-y.
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        "display-lg": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "headline-lg": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "headline-lg-mobile": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "headline-md": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "body-lg": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "body-md": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "label-md": ["var(--font-sans)", "system-ui", "sans-serif"],
+        "label-sm": ["var(--font-sans)", "system-ui", "sans-serif"],
       },
 
       fontSize: {
