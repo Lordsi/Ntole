@@ -20,14 +20,11 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(initialErrorFromUrl);
-  const [info, setInfo] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setInfo(null);
-
     startTransition(async () => {
       const supabase = createBrowserSupabaseClient();
 
@@ -45,15 +42,12 @@ export function LoginForm() {
         return;
       }
 
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        (typeof window !== "undefined" ? window.location.origin : "");
+      const trimmedEmail = email.trim();
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: trimmedEmail,
         password,
         options: {
           data: { full_name: fullName.trim() },
-          emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       });
       if (error) {
@@ -64,11 +58,25 @@ export function LoginForm() {
       if (data.session) {
         router.replace(next);
         router.refresh();
-      } else {
-        setInfo(
-          `We sent a confirmation link to ${email.trim()}. Open it to finish creating your account.`,
-        );
+        return;
       }
+
+      // No confirmation email — sign in immediately after account creation.
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
+      if (signInError) {
+        setError(
+          signInError.message.includes("Email not confirmed")
+            ? "Account created. Disable “Confirm email” in Supabase Auth settings, or sign in with the password you just set."
+            : signInError.message,
+        );
+        return;
+      }
+
+      router.replace(next);
+      router.refresh();
     });
   }
 
@@ -127,7 +135,7 @@ export function LoginForm() {
         className={cn(
           "mt-sm w-full py-md rounded-full font-headline-md text-headline-md font-extrabold tracking-tight transition-all duration-150 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 disabled:cursor-not-allowed",
           !disabled
-            ? "bg-primary-container text-on-primary-container shadow-[0_10px_30px_rgba(57,255,20,0.3)] neon-glow-primary"
+            ? "bg-primary-container text-on-primary-container shadow-elevated neon-glow-primary"
             : "bg-surface-container-highest text-on-surface-variant",
         )}
       >
@@ -142,18 +150,11 @@ export function LoginForm() {
           {error}
         </p>
       )}
-      {info && (
-        <p className="text-center font-body-sm text-body-sm text-primary-container">
-          {info}
-        </p>
-      )}
-
       <button
         type="button"
         onClick={() => {
           setMode(isSignup ? "signin" : "signup");
           setError(null);
-          setInfo(null);
         }}
         className="mt-xs text-center font-body-sm text-body-sm text-on-surface-variant transition-colors hover:text-on-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary-container focus-visible:outline-offset-2 rounded-full py-xs"
       >
@@ -197,9 +198,7 @@ function Field({ icon, label, className, ...input }: FieldProps) {
         className="text-on-surface-variant text-[20px]"
       />
       <div className="flex flex-1 flex-col">
-        <span className="text-label-sm font-label-sm text-on-surface-variant">
-          {label}
-        </span>
+        <span className="caps-label">{label}</span>
         <input
           {...input}
           className="w-full bg-transparent text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none"

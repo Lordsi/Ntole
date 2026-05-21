@@ -8,6 +8,7 @@ import { MaterialIcon } from "@/components/ui/material-icon";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils/cn";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 interface SidebarItem {
   href: string;
@@ -89,6 +90,7 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
           </Link>
         </div>
         <div className="flex items-center gap-xs">
+          <ThemeToggle compact />
           <button
             type="button"
             aria-label="Notifications"
@@ -173,6 +175,9 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
         </nav>
 
         <div className="mt-auto px-lg space-y-sm">
+          <div className="hidden md:block px-md">
+            <ThemeToggle />
+          </div>
           <div className="py-sm px-md rounded-full bg-primary-container/5 border border-primary-container/20">
             <p className="font-label-sm text-label-sm text-primary-container flex items-center gap-xs">
               <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" />

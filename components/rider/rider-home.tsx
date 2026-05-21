@@ -240,9 +240,7 @@ export function RiderHome({ profile, tiers }: RiderHomeProps) {
           {/* Ride Carousel Section */}
           <section className="mt-md">
             <div className="flex justify-between items-center mb-md">
-              <h3 className="font-label-sm text-label-sm text-on-surface-variant tracking-widest uppercase">
-                Choose a Ride
-              </h3>
+              <h3 className="caps-label">Choose a ride</h3>
               {distanceKm !== undefined && durationMin !== undefined ? (
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   {distanceKm.toFixed(1)} km · {Math.round(durationMin)} min

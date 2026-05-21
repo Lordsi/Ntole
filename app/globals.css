@@ -2,198 +2,277 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* ------------------------------------------------------------------ */
+/* Theme tokens — dark (default Night City) + light (premium day)      */
+/* ------------------------------------------------------------------ */
+
+.dark {
   color-scheme: dark;
+
+  --background: 18 20 20;
+  --foreground: 226 226 226;
+  --surface-dim: 18 20 20;
+  --surface-bright: 56 57 58;
+  --surface-container-lowest: 12 15 15;
+  --surface-container-low: 26 28 28;
+  --surface-container: 30 32 32;
+  --surface-container-high: 40 42 43;
+  --surface-container-highest: 51 53 53;
+  --surface-variant: 51 53 53;
+  --on-surface: 226 226 226;
+  --on-surface-variant: 186 204 176;
+  --outline: 133 150 124;
+  --outline-variant: 60 75 53;
+  --primary: 239 255 227;
+  --on-primary: 5 57 0;
+  --primary-container: 57 255 20;
+  --on-primary-container: 16 113 0;
+  --primary-fixed: 121 255 91;
+  --primary-fixed-dim: 42 229 0;
+  --secondary: 200 198 197;
+  --secondary-container: 74 73 73;
+  --on-secondary-container: 186 184 183;
+  --tertiary-fixed-dim: 83 224 118;
+  --error: 255 180 171;
+  --glass-bg: 255 255 255;
+  --glass-border: 255 255 255;
+  --glass-opacity: 0.05;
+  --glass-border-opacity: 0.12;
+  --float-card-from: 30 32 32;
+  --float-card-to: 22 24 24;
+  --map-bg: 10 12 12;
+  --selection-bg: 57 255 20;
+  --selection-fg: 5 57 0;
+  --glow-strength: 0.28;
 }
 
-html,
-body {
-  height: 100%;
-  background-color: #121414;
-  color: #e2e2e2;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+.light {
+  color-scheme: light;
+
+  --background: 246 247 245;
+  --foreground: 28 32 30;
+  --surface-dim: 240 242 239;
+  --surface-bright: 255 255 255;
+  --surface-container-lowest: 255 255 255;
+  --surface-container-low: 248 249 247;
+  --surface-container: 242 244 241;
+  --surface-container-high: 232 235 230;
+  --surface-container-highest: 220 224 218;
+  --surface-variant: 210 216 206;
+  --on-surface: 28 32 30;
+  --on-surface-variant: 82 94 78;
+  --outline: 118 130 112;
+  --outline-variant: 198 208 192;
+  --primary: 18 72 12;
+  --on-primary: 255 255 255;
+  --primary-container: 26 143 14;
+  --on-primary-container: 255 255 255;
+  --primary-fixed: 42 160 28;
+  --primary-fixed-dim: 26 143 14;
+  --secondary: 72 76 72;
+  --secondary-container: 228 230 226;
+  --on-secondary-container: 56 60 56;
+  --tertiary-fixed-dim: 42 140 72;
+  --error: 186 26 26;
+  --glass-bg: 255 255 255;
+  --glass-border: 28 32 30;
+  --glass-opacity: 0.72;
+  --glass-border-opacity: 0.08;
+  --float-card-from: 255 255 255;
+  --float-card-to: 248 249 247;
+  --map-bg: 232 235 228;
+  --selection-bg: 26 143 14;
+  --selection-fg: 255 255 255;
+  --glow-strength: 0.12;
 }
 
-* {
-  border-color: rgba(255, 255, 255, 0.08);
+@layer base {
+  html {
+    @apply antialiased;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-on-background font-body-md;
+    font-variant-numeric: tabular-nums;
+  }
+
+  * {
+    border-color: rgb(var(--glass-border) / 0.08);
+  }
+
+  ::selection {
+    background-color: rgb(var(--selection-bg) / 0.35);
+    color: rgb(var(--selection-fg));
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-sans tracking-tight text-balance;
+  }
 }
 
-::selection {
-  background-color: rgba(57, 255, 20, 0.32);
-  color: #053900;
-}
-
-/* Material Symbols default weight/optical-size tuned for our UI. */
+/* Material Symbols */
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
-/* ------------------------------------------------------------------ */
-/* Stitch helpers — these are referenced verbatim from the HTML mocks */
-/* ------------------------------------------------------------------ */
+/* Premium section labels — sans, not mono */
+.caps-label {
+  @apply font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-on-surface-variant;
+}
+
+/* Data-only mono (prices, plates, ETAs) */
+.font-data {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
 
 .glass-panel,
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  background: rgb(var(--glass-bg) / var(--glass-opacity));
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgb(var(--glass-border) / var(--glass-border-opacity));
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+.light .glass-panel,
+.light .glass-card {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 4px 12px rgb(0 0 0 / 0.03);
 }
 
 .glass-panel-strong {
-  background: rgba(15, 17, 17, 0.78);
+  background: rgb(var(--float-card-from) / 0.94);
   -webkit-backdrop-filter: blur(28px) saturate(150%);
   backdrop-filter: blur(28px) saturate(150%);
-  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgb(var(--glass-border) / 0.1);
 }
 
-/* Neon glow halos around interactive accents. */
 .neon-glow-primary {
-  box-shadow: 0 0 12px rgba(57, 255, 20, 0.28);
+  box-shadow: 0 0 14px rgb(var(--primary-container) / var(--glow-strength));
 }
+
 .neon-glow-intense {
-  box-shadow: 0 0 20px rgba(57, 255, 20, 0.38);
+  box-shadow: 0 0 22px rgb(var(--primary-container) / calc(var(--glow-strength) * 1.4));
 }
+
 .neon-glow {
-  box-shadow: 0 0 12px rgba(57, 255, 20, 0.18);
+  box-shadow: 0 0 12px rgb(var(--primary-container) / calc(var(--glow-strength) * 0.7));
 }
+
 .neon-glow-strong {
-  box-shadow: 0 0 16px rgba(57, 255, 20, 0.3);
+  box-shadow: 0 0 16px rgb(var(--primary-container) / calc(var(--glow-strength) * 1.1));
 }
+
 .neon-line {
-  box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+  box-shadow: 0 0 8px rgb(var(--primary-container) / calc(var(--glow-strength) * 1.2));
 }
 
-/* Route line drop-shadow for SVG strokes on the map. */
 .route-line {
-  filter: drop-shadow(0 0 8px rgba(57, 255, 20, 0.8));
+  filter: drop-shadow(0 0 6px rgb(var(--primary-container) / 0.5));
 }
 
-/* Radial fade-to-background used behind ambient map images. */
 .map-gradient-overlay {
-  background: radial-gradient(circle at center, transparent 0%, #121414 100%);
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    rgb(var(--background)) 100%
+  );
 }
 
-/* Softer edge fade on desktop maps — keeps focus on the floating card. */
 .map-edge-vignette {
   background:
-    linear-gradient(90deg, rgba(18, 20, 20, 0.5) 0%, transparent 18%),
-    linear-gradient(270deg, rgba(18, 20, 20, 0.35) 0%, transparent 28%),
-    radial-gradient(ellipse 120% 80% at 50% 100%, rgba(18, 20, 20, 0.65), transparent 55%);
+    linear-gradient(90deg, rgb(var(--background) / 0.45) 0%, transparent 18%),
+    linear-gradient(270deg, rgb(var(--background) / 0.3) 0%, transparent 28%),
+    radial-gradient(
+      ellipse 120% 80% at 50% 100%,
+      rgb(var(--background) / 0.55),
+      transparent 55%
+    );
 }
 
-/* Elevated floating panel used on desktop map-first layouts. */
 .desktop-float-card {
   background: linear-gradient(
     165deg,
-    rgba(30, 32, 32, 0.96) 0%,
-    rgba(22, 24, 24, 0.98) 100%
+    rgb(var(--float-card-from) / 0.98) 0%,
+    rgb(var(--float-card-to) / 0.99) 100%
   );
   -webkit-backdrop-filter: blur(32px) saturate(140%);
   backdrop-filter: blur(32px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.5rem;
+  border: 1px solid rgb(var(--glass-border) / 0.1);
+  border-radius: 1.25rem;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 24px 48px rgba(0, 0, 0, 0.55),
-    0 8px 16px rgba(0, 0, 0, 0.35);
+    0 0 0 1px rgb(0 0 0 / 0.04),
+    0 20px 40px rgb(0 0 0 / 0.08),
+    0 8px 16px rgb(0 0 0 / 0.04);
+}
+
+.dark .desktop-float-card {
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.35),
+    0 24px 48px rgb(0 0 0 / 0.5),
+    0 8px 16px rgb(0 0 0 / 0.3);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgb(var(--on-surface) / 0.15);
   border-radius: 99px;
 }
 
-/* ------------------------------------------------------------------ */
-/* Stitch ambient "Night City" map backdrop                            */
-/*                                                                     */
-/* The Stitch mocks place a darkened satellite map behind the rider    */
-/* home and driver dashboard. We replicate the same vibe with pure CSS */
-/* (no third-party image fetch): a charcoal base + faint grid + a few  */
-/* neon "traffic" streaks + a radial vignette so the centered phone    */
-/* column reads as a glowing device on top of a city at night.         */
-/* ------------------------------------------------------------------ */
-
 .stitch-map-backdrop {
-  background-color: #0a0c0c;
+  background-color: rgb(var(--map-bg));
   background-image:
-    /* faint street grid */
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    /* sparse highlight grid */
-    linear-gradient(rgba(57, 255, 20, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(57, 255, 20, 0.04) 1px, transparent 1px),
-    /* neon "traffic" arteries */
+    linear-gradient(rgb(var(--on-surface) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--on-surface) / 0.03) 1px, transparent 1px),
+    linear-gradient(rgb(var(--primary-container) / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--primary-container) / 0.04) 1px, transparent 1px),
     radial-gradient(
       ellipse 80% 8% at 30% 28%,
-      rgba(57, 255, 20, 0.18),
+      rgb(var(--primary-container) / 0.12),
       transparent 70%
     ),
-    radial-gradient(
-      ellipse 6% 60% at 70% 55%,
-      rgba(57, 255, 20, 0.14),
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 50% 5% at 50% 75%,
-      rgba(57, 255, 20, 0.12),
-      transparent 70%
-    ),
-    /* base wash */
-    linear-gradient(180deg, #08110a 0%, #0a0c0c 50%, #06080a 100%);
+    linear-gradient(180deg, rgb(var(--map-bg)) 0%, rgb(var(--background)) 100%);
   background-size:
     48px 48px,
     48px 48px,
     192px 192px,
     192px 192px,
     100% 100%,
-    100% 100%,
-    100% 100%,
     100% 100%;
-  background-position:
-    0 0,
-    0 0,
-    24px 24px,
-    24px 24px,
-    0 0,
-    0 0,
-    0 0,
-    0 0;
 }
 
-/* Used on top of `.stitch-map-backdrop` to keep the centered phone
-   column visually dominant — the backdrop fades into the body color
-   at the very center. */
 .stitch-map-vignette {
   background: radial-gradient(
     ellipse 70% 60% at 50% 50%,
     transparent 0%,
-    rgba(18, 20, 20, 0.55) 55%,
-    #121414 100%
+    rgb(var(--background) / 0.5) 55%,
+    rgb(var(--background)) 100%
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Scrollbar styling                                                  */
-/* ------------------------------------------------------------------ */
 
 *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 *::-webkit-scrollbar-track {
-  background: #121414;
+  background: rgb(var(--background));
 }
 *::-webkit-scrollbar-thumb {
-  background: #333535;
+  background: rgb(var(--surface-container-highest));
   border-radius: 3px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #4a4949;
+  background: rgb(var(--outline-variant));
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -204,64 +283,43 @@ body {
   scrollbar-width: none;
 }
 
-/* ------------------------------------------------------------------ */
-/* Leaflet — dark map tuned to the Stitch background palette.         */
-/* We use CartoDB Dark Matter tiles, which are already a designed     */
-/* dark basemap, so no invert/hue-rotate hack is needed (those made   */
-/* labels muddy and unreadable).                                      */
-/* ------------------------------------------------------------------ */
-
 .leaflet-container {
-  background: #0a0c0c !important;
+  background: rgb(var(--map-bg)) !important;
   font-family: inherit;
   outline: none;
 }
-.leaflet-pane,
-.leaflet-tile,
-.leaflet-marker-icon,
-.leaflet-marker-shadow {
-  will-change: transform;
-}
 .leaflet-control-attribution {
-  background: rgba(18, 20, 20, 0.6) !important;
-  color: #9aa89a !important;
+  background: rgb(var(--background) / 0.75) !important;
+  color: rgb(var(--on-surface-variant)) !important;
   font-size: 10px !important;
   padding: 2px 8px !important;
   border-top-left-radius: 8px;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 .leaflet-control-attribution a {
-  color: #39ff14 !important;
-  text-decoration: none;
-}
-.leaflet-control-attribution a:hover {
-  text-decoration: underline;
+  color: rgb(var(--primary-container)) !important;
 }
 .leaflet-control-zoom {
   border: none !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
   border-radius: 12px !important;
   overflow: hidden;
 }
 .leaflet-control-zoom a {
-  background: rgba(20, 22, 22, 0.85) !important;
-  color: #e2e2e2 !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgb(var(--surface-container) / 0.92) !important;
+  color: rgb(var(--on-surface)) !important;
+  border-color: rgb(var(--glass-border) / 0.08) !important;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   font-weight: 500;
 }
 .leaflet-control-zoom a:hover {
-  background: rgba(40, 42, 43, 0.95) !important;
-  color: #39ff14 !important;
+  background: rgb(var(--surface-container-high)) !important;
+  color: rgb(var(--primary-container)) !important;
 }
-/* Smooth the neon route polyline. */
 .leaflet-overlay-pane svg path {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-/* Custom marker classes — let halos overflow without clipping. */
 .ntole-map-pin,
 .ntole-map-car,
 .ntole-map-fleet {

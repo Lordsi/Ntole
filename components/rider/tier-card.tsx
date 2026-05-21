@@ -85,7 +85,7 @@ export function TierCard({
       </div>
       <p
         className={cn(
-          "font-label-md text-label-md mt-sm lg:mt-0 font-bold lg:ml-auto lg:text-right lg:shrink-0",
+          "font-data text-label-md mt-sm lg:mt-0 font-semibold lg:ml-auto lg:text-right lg:shrink-0",
           active ? "text-primary-container" : "text-on-surface",
         )}
       >

@@ -1,13 +1,8 @@
 import type { Config } from "tailwindcss";
 
-/**
- * Token system mirrors the Stitch "Ntole — Night City" design language:
- * Material 3 dark-mode color roles (surface tiers + on-* foreground roles),
- * Geist + JetBrains Mono typography, neon-green primary container as the
- * single source of interactive emphasis. Legacy aliases (accent, background,
- * surface, surface-2, surface-3, muted, muted-strong, danger) are kept so
- * pages we haven't migrated yet keep rendering.
- */
+const withAlpha = (name: string) =>
+  `rgb(var(--${name}) / <alpha-value>)` as const;
+
 export default {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -18,82 +13,48 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ---- Stitch Material-3 roles ----
-        background: "#121414",
-        surface: "#121414",
-        "surface-dim": "#121414",
-        "surface-bright": "#38393a",
-        "surface-container-lowest": "#0c0f0f",
-        "surface-container-low": "#1a1c1c",
-        "surface-container": "#1e2020",
-        "surface-container-high": "#282a2b",
-        "surface-container-highest": "#333535",
-        "surface-variant": "#333535",
-
-        "on-surface": "#e2e2e2",
-        "on-surface-variant": "#baccb0",
-        "on-background": "#e2e2e2",
-        "inverse-surface": "#e2e2e2",
-        "inverse-on-surface": "#2f3131",
-
-        outline: "#85967c",
-        "outline-variant": "#3c4b35",
-        "surface-tint": "#2ae500",
-
-        primary: "#efffe3",
-        "on-primary": "#053900",
-        "primary-container": "#39ff14",
-        "on-primary-container": "#107100",
-        "inverse-primary": "#106e00",
-        "primary-fixed": "#79ff5b",
-        "primary-fixed-dim": "#2ae500",
-        "on-primary-fixed": "#022100",
-        "on-primary-fixed-variant": "#095300",
-
-        secondary: "#c8c6c5",
-        "on-secondary": "#313030",
-        "secondary-container": "#4a4949",
-        "on-secondary-container": "#bab8b7",
-        "secondary-fixed": "#e5e2e1",
-        "secondary-fixed-dim": "#c8c6c5",
-        "on-secondary-fixed": "#1c1b1b",
-        "on-secondary-fixed-variant": "#474646",
-
-        tertiary: "#ebffe8",
-        "on-tertiary": "#003914",
-        "tertiary-container": "#6cf88a",
-        "on-tertiary-container": "#00702e",
-        "tertiary-fixed": "#72fe8f",
-        "tertiary-fixed-dim": "#53e076",
-        "on-tertiary-fixed": "#002108",
-        "on-tertiary-fixed-variant": "#005320",
-
-        error: "#ffb4ab",
-        "on-error": "#690005",
-        "error-container": "#93000a",
-        "on-error-container": "#ffdad6",
-
-        // ---- Legacy aliases (keep unconverted pages working) ----
-        "surface-2": "#282a2b",
-        "surface-3": "#333535",
+        background: withAlpha("background"),
+        surface: withAlpha("background"),
+        "surface-dim": withAlpha("surface-dim"),
+        "surface-bright": withAlpha("surface-bright"),
+        "surface-container-lowest": withAlpha("surface-container-lowest"),
+        "surface-container-low": withAlpha("surface-container-low"),
+        "surface-container": withAlpha("surface-container"),
+        "surface-container-high": withAlpha("surface-container-high"),
+        "surface-container-highest": withAlpha("surface-container-highest"),
+        "surface-variant": withAlpha("surface-variant"),
+        "on-surface": withAlpha("on-surface"),
+        "on-surface-variant": withAlpha("on-surface-variant"),
+        "on-background": withAlpha("foreground"),
+        outline: withAlpha("outline"),
+        "outline-variant": withAlpha("outline-variant"),
+        primary: withAlpha("primary"),
+        "on-primary": withAlpha("on-primary"),
+        "primary-container": withAlpha("primary-container"),
+        "on-primary-container": withAlpha("on-primary-container"),
+        "primary-fixed": withAlpha("primary-fixed"),
+        "primary-fixed-dim": withAlpha("primary-fixed-dim"),
+        secondary: withAlpha("secondary"),
+        "secondary-container": withAlpha("secondary-container"),
+        "on-secondary-container": withAlpha("on-secondary-container"),
+        "tertiary-fixed-dim": withAlpha("tertiary-fixed-dim"),
+        error: withAlpha("error"),
+        "surface-2": withAlpha("surface-container-high"),
+        "surface-3": withAlpha("surface-container-highest"),
         accent: {
-          DEFAULT: "#39ff14",
-          hover: "#79ff5b",
+          DEFAULT: withAlpha("primary-container"),
+          hover: withAlpha("primary-fixed"),
           muted: "#1F5E3C",
           subtle: "#132A1F",
         },
-        muted: "#baccb0",
-        "muted-strong": "#e2e2e2",
-        danger: "#ffb4ab",
+        muted: withAlpha("on-surface-variant"),
+        "muted-strong": withAlpha("on-surface"),
+        danger: withAlpha("error"),
         warning: "#FF9F0A",
       },
 
       fontFamily: {
-        // The base sans font. `var(--font-geist)` is injected from
-        // `next/font/google` in `app/layout.tsx`.
         sans: ["var(--font-geist)", "system-ui", "sans-serif"],
-        // Stitch role-named families. Both map to Geist except label fonts
-        // which use JetBrains Mono — exactly mirroring DESIGN.md.
         "display-lg": ["var(--font-geist)", "sans-serif"],
         "headline-lg": ["var(--font-geist)", "sans-serif"],
         "headline-lg-mobile": ["var(--font-geist)", "sans-serif"],
@@ -106,32 +67,51 @@ export default {
 
       fontSize: {
         "display-lg": [
-          "48px",
-          { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "800" },
+          "2.75rem",
+          {
+            lineHeight: "1.1",
+            letterSpacing: "-0.03em",
+            fontWeight: "700",
+          },
         ],
         "headline-lg": [
-          "32px",
-          { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" },
+          "2rem",
+          {
+            lineHeight: "1.2",
+            letterSpacing: "-0.02em",
+            fontWeight: "600",
+          },
         ],
         "headline-lg-mobile": [
-          "28px",
-          { lineHeight: "36px", fontWeight: "700" },
+          "1.75rem",
+          { lineHeight: "1.25", letterSpacing: "-0.02em", fontWeight: "600" },
         ],
-        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
-        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
-        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "headline-md": [
+          "1.375rem",
+          { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" },
+        ],
+        "body-lg": ["1.125rem", { lineHeight: "1.55", fontWeight: "400" }],
+        "body-md": ["1rem", { lineHeight: "1.5", fontWeight: "400" }],
+        "body-sm": ["0.875rem", { lineHeight: "1.45", fontWeight: "400" }],
         "label-md": [
-          "14px",
-          { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "500" },
+          "0.8125rem",
+          {
+            lineHeight: "1.35",
+            letterSpacing: "0.03em",
+            fontWeight: "500",
+          },
         ],
         "label-sm": [
-          "12px",
-          { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "500" },
+          "0.6875rem",
+          {
+            lineHeight: "1.3",
+            letterSpacing: "0.04em",
+            fontWeight: "500",
+          },
         ],
       },
 
       borderRadius: {
-        // Stitch shape scale.
         DEFAULT: "1rem",
         md: "1.5rem",
         lg: "2rem",
@@ -141,7 +121,6 @@ export default {
       },
 
       spacing: {
-        // Stitch 4px-based rhythm — names align to the HTML's `p-md`, `gap-lg`, etc.
         unit: "4px",
         xs: "4px",
         sm: "8px",
@@ -154,12 +133,12 @@ export default {
       },
 
       boxShadow: {
-        // Glow utilities tuned to the neon primary-container (#39FF14).
-        glow: "0 0 15px rgba(57,255,20,0.3)",
-        "glow-strong": "0 0 30px rgba(57,255,20,0.6)",
-        // Generic depth for stacked surfaces.
-        card: "0 8px 24px rgba(0,0,0,0.55)",
-        sheet: "0 -10px 40px rgba(0,0,0,0.6)",
+        glow: "0 0 15px rgb(var(--primary-container) / 0.25)",
+        "glow-strong": "0 0 24px rgb(var(--primary-container) / 0.35)",
+        card: "0 8px 24px rgb(0 0 0 / 0.08)",
+        sheet: "0 -10px 40px rgb(0 0 0 / 0.12)",
+        elevated:
+          "0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06)",
       },
 
       backdropBlur: {
@@ -172,17 +151,17 @@ export default {
           "100%": { opacity: "1" },
         },
         "slide-up": {
-          "0%": { transform: "translateY(20px)", opacity: "0" },
+          "0%": { transform: "translateY(12px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
         pulseSoft: {
           "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.6" },
+          "50%": { opacity: "0.65" },
         },
       },
       animation: {
         "fade-in": "fade-in 0.2s ease-out",
-        "slide-up": "slide-up 0.3s ease-out",
+        "slide-up": "slide-up 0.28s ease-out",
         "pulse-soft": "pulseSoft 1.6s ease-in-out infinite",
       },
     },

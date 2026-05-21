@@ -11,6 +11,7 @@ import {
 import L, { type LatLngBoundsExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { useTheme } from "@/components/shared/theme-provider";
 import type { LatLng } from "@/lib/maps/types";
 
 interface RideMapProps {
@@ -104,10 +105,11 @@ export default function RideMap({
   const driverPinIcon = useRef(carIcon()).current;
   const fleetPinIcon = useRef(fleetIcon()).current;
 
-  // CartoDB Dark Matter — purpose-built dark basemap with hi-DPI tiles.
-  // No API key required; attribution preserved below.
+  const { theme } = useTheme();
   const tileUrl =
-    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    theme === "light"
+      ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
   const tileAttribution =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
@@ -123,6 +125,7 @@ export default function RideMap({
         preferCanvas
       >
         <TileLayer
+          key={tileUrl}
           attribution={tileAttribution}
           url={tileUrl}
           subdomains={["a", "b", "c", "d"]}

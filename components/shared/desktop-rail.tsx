@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Avatar } from "@/components/ui/avatar";
 import { MaterialIcon } from "@/components/ui/material-icon";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { cn } from "@/lib/utils/cn";
 
 import type { MobileShellNavItem } from "@/components/shared/mobile-shell";
@@ -35,7 +36,7 @@ export function DesktopRail({
 
   return (
     <aside
-      className="hidden lg:flex w-[240px] shrink-0 flex-col border-r border-white/[0.06] bg-surface-container-low/95 backdrop-blur-xl"
+      className="hidden lg:flex w-[240px] shrink-0 flex-col border-r border-outline-variant/30 bg-surface-container-low/95 backdrop-blur-xl"
       aria-label="Main navigation"
     >
       <div className="px-lg pt-lg pb-md">
@@ -93,7 +94,9 @@ export function DesktopRail({
         })}
       </nav>
 
-      <div className="mt-auto border-t border-white/[0.06] p-md space-y-sm">
+      <div className="mt-auto border-t border-outline-variant/30 p-md space-y-sm">
+        <ThemeToggle compact className="w-full justify-center" />
+
         <button
           type="button"
           aria-label="Notifications"

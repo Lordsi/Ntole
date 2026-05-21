@@ -6,6 +6,7 @@ import { MaterialIcon } from "@/components/ui/material-icon";
 import { Avatar } from "@/components/ui/avatar";
 
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const { profile } = await requireRole("admin");
@@ -22,6 +23,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <main className="md:ml-64 px-md md:px-xl pt-[4.5rem] md:pt-xl pb-xl min-h-screen">
         <div className="mx-auto max-w-[1400px]">
         <header className="hidden md:flex justify-end items-center gap-md mb-xl">
+          <ThemeToggle compact />
           <button
             type="button"
             aria-label="Notifications"

@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MaterialIcon } from "@/components/ui/material-icon";
 import { DesktopRail } from "@/components/shared/desktop-rail";
 import { StitchMapBackdrop } from "@/components/shared/stitch-map-backdrop";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { cn } from "@/lib/utils/cn";
 
 export interface MobileShellNavItem {
@@ -151,7 +152,7 @@ function MobileTopBar({
   topRight?: React.ReactNode;
 }) {
   return (
-    <header className="lg:hidden fixed top-0 inset-x-0 z-50 flex justify-between items-center px-margin-mobile py-md bg-background/80 backdrop-blur-xl border-b border-white/10">
+    <header className="lg:hidden fixed top-0 inset-x-0 z-50 flex justify-between items-center px-margin-mobile py-md bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
       <button
         type="button"
         aria-label="Menu"
@@ -162,7 +163,8 @@ function MobileTopBar({
       <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary-container tracking-tighter">
         Ntole
       </h1>
-      <div className="flex items-center gap-sm">
+      <div className="flex items-center gap-xs">
+        <ThemeToggle compact />
         <button
           type="button"
           aria-label="Notifications"
