@@ -25,9 +25,12 @@ interface UserRoleSelectProps {
  *
  * Click a role pill to promote/demote the target user. Admins can't change
  * their own role from this widget; they have to do it from another admin's
- * session to avoid locking themselves out. Promoting to `driver` also
- * upserts a row in the `drivers` table so they immediately have a driver
- * record (offline + unverified by default).
+ * session to avoid locking themselves out.
+ *
+ * Promoting to `driver` upserts a `drivers` row pre-approved + verified
+ * so the user skips the public application wizard — the admin has
+ * already vetted them by promoting them. They land straight on the
+ * driver dashboard the next time they sign in.
  */
 export function UserRoleSelect({ userId, role, selfId }: UserRoleSelectProps) {
   const [value, setValue] = useState<UserRole>(role);
@@ -51,18 +54,33 @@ export function UserRoleSelect({ userId, role, selfId }: UserRoleSelectProps) {
       return;
     }
 
-    // Make sure a `drivers` row exists the moment someone is promoted to
-    // driver, otherwise the driver portal blows up on first load.
+    // Admin-driven promotion → pre-approved driver. We seed a `drivers`
+    // row with `approval_status: 'approved'` and `is_verified: true` so
+    // middleware doesn't bounce them to /driver/apply and so they can
+    // immediately Go online from the dashboard. Existing
+    // banned/rejected drivers are left untouched — those need to go
+    // through the moderation surface in /admin/drivers/[id] instead.
     if (next === "driver") {
-      await supabase.from("drivers").upsert(
-        {
-          profile_id: userId,
-          status: "offline",
-          is_verified: false,
-          approval_status: "draft",
-        },
-        { onConflict: "profile_id", ignoreDuplicates: false },
-      );
+      const { data: existing } = await supabase
+        .from("drivers")
+        .select("approval_status")
+        .eq("profile_id", userId)
+        .maybeSingle<{ approval_status: string | null }>();
+
+      const status = existing?.approval_status ?? null;
+      const isBlocked = status === "banned" || status === "rejected";
+
+      if (!isBlocked) {
+        await supabase.from("drivers").upsert(
+          {
+            profile_id: userId,
+            status: "offline",
+            is_verified: true,
+            approval_status: "approved",
+          },
+          { onConflict: "profile_id", ignoreDuplicates: false },
+        );
+      }
     }
     setBusy(false);
   }
