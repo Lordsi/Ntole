@@ -34,8 +34,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             />
           </button>
           <Link
-            href="/admin"
-            className="flex items-center gap-sm glass-panel py-xs px-md rounded-full border border-white/10"
+            href="/admin/profile"
+            aria-label="My profile"
+            className="flex items-center gap-sm glass-panel py-xs px-md rounded-full border border-white/10 hover:bg-white/5 transition-colors"
           >
             <div className="w-8 h-8 rounded-full overflow-hidden">
               <Avatar
@@ -44,7 +45,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 size={32}
               />
             </div>
-            <span className="font-label-md text-label-md">Admin Portal</span>
+            <span className="font-label-md text-label-md">My Profile</span>
           </Link>
         </header>
 

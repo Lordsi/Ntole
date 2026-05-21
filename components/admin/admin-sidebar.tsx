@@ -21,6 +21,7 @@ const NAV: SidebarItem[] = [
   { href: "/admin/drivers", icon: "directions_car", label: "Drivers" },
   { href: "/admin/rides", icon: "leaderboard", label: "Rides" },
   { href: "/admin/pricing", icon: "settings", label: "Pricing" },
+  { href: "/admin/profile", icon: "person", label: "My Profile" },
 ];
 
 interface AdminSidebarProps {
@@ -96,8 +97,8 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
             <MaterialIcon name="notifications" />
           </button>
           <Link
-            href="/admin"
-            aria-label="Admin profile"
+            href="/admin/profile"
+            aria-label="My profile"
             className="w-9 h-9 rounded-full overflow-hidden border border-white/10"
           >
             <Avatar
@@ -179,8 +180,15 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
             </p>
           </div>
           <Link
+            href="/rider"
+            className="flex items-center gap-md text-on-surface-variant py-md px-md rounded-md hover:bg-white/5 hover:text-on-surface transition-colors"
+          >
+            <MaterialIcon name="public" />
+            <span className="font-label-md text-label-md">Back to site</span>
+          </Link>
+          <Link
             href="#"
-            className="flex items-center gap-md text-on-surface-variant py-md px-md hover:text-on-surface transition-opacity"
+            className="flex items-center gap-md text-on-surface-variant py-md px-md rounded-md hover:bg-white/5 hover:text-on-surface transition-colors"
           >
             <MaterialIcon name="help" />
             <span className="font-label-md text-label-md">Support</span>
@@ -188,7 +196,7 @@ export function AdminSidebar({ adminName, adminAvatarUrl }: AdminSidebarProps) {
           <button
             type="button"
             onClick={signOut}
-            className="flex w-full items-center gap-md text-error py-md px-md hover:opacity-80 transition-opacity"
+            className="flex w-full items-center gap-md text-error py-md px-md rounded-md hover:bg-error/10 transition-colors"
           >
             <MaterialIcon name="logout" />
             <span className="font-label-md text-label-md">Logout</span>

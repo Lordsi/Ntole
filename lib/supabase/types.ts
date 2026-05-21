@@ -26,8 +26,18 @@ export interface Profile {
   rating: number;
   trip_count: number;
   safety_rating: number;
+  /** Saved home pickup pin (optional). */
+  home_lat: number | null;
+  home_lng: number | null;
+  home_address: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface FavoriteDriver {
+  rider_id: string;
+  driver_id: string;
+  created_at: string;
 }
 
 export interface RideTier {
