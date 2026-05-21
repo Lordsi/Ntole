@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireRole } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import {
   UploadDocBody,
   storagePathForDoc,
@@ -18,7 +18,12 @@ const ALLOWED_MIME = new Set([
 ]);
 
 export async function POST(request: Request) {
-  const { profile } = await requireRole("driver", "admin");
+  // Any signed-in user can request an upload URL — riders applying
+  // to drive need the same wizard-time upload flow drivers do.
+  const { profile } = await requireUser();
+  if (!profile) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
   const body = UploadDocBody.safeParse(await request.json().catch(() => null));
   if (!body.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -39,7 +44,7 @@ export async function POST(request: Request) {
         ? "webp"
         : "jpg");
 
-  const { bucket, path } = storagePathForDoc(profile!.id, body.data.docType, ext);
+  const { bucket, path } = storagePathForDoc(profile.id, body.data.docType, ext);
   const admin = createServiceSupabaseClient();
   const { data, error } = await admin.storage
     .from(bucket)

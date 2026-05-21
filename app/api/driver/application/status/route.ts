@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server";
 
-import { requireRole } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import type { Driver } from "@/lib/supabase/types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const { profile } = await requireRole("driver", "admin");
+  // Pollable from any signed-in user, including riders who just kicked
+  // off an application — they need to see their pending state too.
+  const { profile } = await requireUser();
+  if (!profile) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
   const supabase = await createServerSupabaseClient();
   const { data: driver, error } = await supabase
     .from("drivers")
     .select("*")
-    .eq("profile_id", profile!.id)
+    .eq("profile_id", profile.id)
     .maybeSingle<Driver>();
 
   if (error) {

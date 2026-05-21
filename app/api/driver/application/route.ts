@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireRole } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import {
   ApplicationBody,
   validateSubmitPayload,
@@ -14,7 +14,13 @@ import type { Driver } from "@/lib/supabase/types";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const { profile } = await requireRole("driver", "admin");
+  // Any signed-in user can apply — including riders who don't have a
+  // driver profile yet. On `submit` we'll flip their role to "driver"
+  // server-side via the service-role client.
+  const { profile } = await requireUser();
+  if (!profile) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
   const parsed = ApplicationBody.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -27,7 +33,7 @@ export async function POST(request: Request) {
   const { data: existing } = await supabase
     .from("drivers")
     .select("*")
-    .eq("profile_id", profile!.id)
+    .eq("profile_id", profile.id)
     .maybeSingle<Driver>();
 
   if (
@@ -69,11 +75,11 @@ export async function POST(request: Request) {
         ...(input.fullName ? { full_name: input.fullName.trim() } : {}),
         ...(input.phone !== undefined ? { phone: input.phone || null } : {}),
       })
-      .eq("id", profile!.id);
+      .eq("id", profile.id);
   }
 
   const driverPatch: Record<string, unknown> = {
-    profile_id: profile!.id,
+    profile_id: profile.id,
     status: "offline",
     is_verified: false,
   };
@@ -117,6 +123,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: driverErr.message }, { status: 500 });
   }
 
+  // When a rider submits the application, promote them to driver so the
+  // middleware routes them through the normal pending-driver flow
+  // (/driver/onboarding while submitted, /driver once approved). We
+  // never auto-promote admins — they're already at a higher privilege
+  // level and should keep that role.
+  if (input.action === "submit" && profile.role === "rider") {
+    await service
+      .from("profiles")
+      .update({ role: "driver" })
+      .eq("id", profile.id);
+  }
+
   if (
     input.make &&
     input.model &&
@@ -125,7 +143,7 @@ export async function POST(request: Request) {
     input.seats
   ) {
     const vehiclePayload = {
-      driver_id: profile!.id,
+      driver_id: profile.id,
       tier_id: input.requestedTierId,
       make: input.make,
       model: input.model,
@@ -153,7 +171,7 @@ export async function POST(request: Request) {
       await supabase
         .from("drivers")
         .update({ vehicle_id: vehicle.id })
-        .eq("profile_id", profile!.id);
+        .eq("profile_id", profile.id);
     }
   }
 

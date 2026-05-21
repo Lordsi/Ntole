@@ -43,6 +43,14 @@ const SEGMENT_ROLES: Record<string, UserRole[]> = {
 };
 
 /**
+ * Cross-role paths — reachable by any signed-in user regardless of their
+ * current `profiles.role`. Used today for the driver application flow:
+ * a rider needs to be able to open the wizard, submit it, and watch
+ * their pending status before they're a driver yet.
+ */
+const CROSS_ROLE_PREFIXES = ["/driver/apply", "/driver/onboarding"] as const;
+
+/**
  * Returns true if the role is allowed to access the given path. Anonymous
  * users only get here after a public-path check, so we always require a role.
  */
@@ -50,9 +58,12 @@ export function canAccess(
   pathname: string,
   role: UserRole | null | undefined,
 ): boolean {
+  if (!role) return false;
+  if (CROSS_ROLE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return true;
+  }
   const segment = pathname.split("/").filter(Boolean)[0] ?? "";
   const allowed = SEGMENT_ROLES[segment];
   if (!allowed) return true;
-  if (!role) return false;
   return allowed.includes(role);
 }
